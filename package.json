@@ -1,0 +1,13 @@
+{
+  "name": "ken-markup",
+  "version": "0.1.0",
+  "description": "Markup language for ken-system",
+  "main": "index.js",
+  "type": "module",
+  "author": "nemovim",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nemovim/ken-markup.git"
+  }
+}
