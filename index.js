@@ -9,7 +9,7 @@ class Translator {
     static hrReg = /(?<=\n)(?<!\\)(----\n)/g;
     static anchorReg = /(?<!\\)\[\[(?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.+?)))]]/g;
     static noteReg = /(?<!\\)\(\((?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.*?)))\)\)/g;
-    static titleReg = /(?<=\n)(?<!\\)(={2,6}) (.+)(?=\n)/g;
+    static titleReg = /(?<=\n)(?<!\\)(={1,5}) (.+)(?=\n)/g;
     static paragraphReg = /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
 
     // static spanReg = /./g;
@@ -66,13 +66,13 @@ class Translator {
     static toAnchor(content) {
         return content.replaceAll(
             this.anchorReg,
-            (_match, linkName, link, name) => {
+            (_match, linkName, name, link) => {
                 if (linkName !== undefined) {
                     //only link
                     let parsedLinkName = this.parseAnchorLink(linkName);
                     return `<a title="${parsedLinkName}" href="${parsedLinkName}">${linkName}</a>`;
                 } else {
-                    //link | name
+                    // name | link 
                     link = this.parseAnchorLink(link);
                     return `<a title="${link}" href="${link}">${name}</a>`;
                 }
@@ -174,10 +174,10 @@ class Translator {
             this.titleReg,
             (_match, capture, content) => {
                 if (
-                    capture.length - 1 <= titleLevel + 1 &&
-                    capture.length - 1 >= 1
+                    capture.length <= titleLevel + 1 &&
+                    capture.length >= 1
                 ) {
-                    titleLevel = capture.length - 1;
+                    titleLevel = capture.length;
                     titleIndex = this.changeTitleIndex(titleIndex, titleLevel);
                     titleMap.set(titleIndex, content);
                     return this.makeTitle(titleIndex, titleLevel, content);
