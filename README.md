@@ -2,36 +2,36 @@
 
 ken-markup is a markup language made for family websites of ken-system.
 
-# Instruction 
+## Instruction 
 
 1. Install the module 
 
-```bash
-npm i ken-markup
-```
+    ```bash
+    $ npm i ken-markup
+    ```
 
 2. Import the module 
 
-```js
-import Translator from 'ken-markup'
-```
+    ```js
+    import Translator from 'ken-markup'
+    ```
 
-*You can import it with a different name (i.e. instead of Translator) if you want.*
+    *You can import it with a different name (i.e. instead of Translator) if you want.*
 
 3. Translate the text
 
-```js
-translatedText = Translator.translate(originalText);
-```
+    ```js
+    translatedText = Translator.translate(originalText);
+    ```
 
-# Features
+## Features
 
 * It converts text into HTML elements.
 * It supports enough grammar to write basic articles.
 * It makes an index-table and footnotes automatically.
 * Anyone can design it since it returns raw HTML code.
 
-# Grammar
+## Grammar
 
 * \*\*bold**
 * \//italic//
