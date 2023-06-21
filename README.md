@@ -10,7 +10,7 @@ ken-markup is a markup language made for family websites of ken-system.
 npm i ken-markup
 ```
 
-1. Import the module 
+2. Import the module 
 
 ```js
 import Translator from 'ken-markup'
@@ -18,7 +18,7 @@ import Translator from 'ken-markup'
 
 *You can import it with a different name (i.e. instead of Translator) if you want.*
 
-1. Translate the text
+3. Translate the text
 
 ```js
 translatedText = Translator.translate(originalText);
@@ -45,7 +45,7 @@ translatedText = Translator.translate(originalText);
 
     ```
     ex) [[name|link]]
-    -> [name] // The href is the link
+    -> name // The href be the link
     ```
 
     *If you want to add some rules to the link text, you can override `parseAnchorLink` method of the class.*
@@ -56,7 +56,7 @@ translatedText = Translator.translate(originalText);
 
     ```
     ex) ((index|note))
-    -> [index] // The content is the note
+    -> [index] // The content be the note
     ```
 
 * = title
