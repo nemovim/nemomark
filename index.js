@@ -10,7 +10,8 @@ class Translator {
     static anchorReg = /(?<!\\)\[\[(?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.+?)))]]/g;
     static noteReg = /(?<!\\)\(\((?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.*?)))\)\)/g;
     static titleReg = /(?<=\n)(?<!\\)(={1,5}) (.+)(?=\n)/g;
-    static paragraphReg = /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
+    static paragraphReg =
+        /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
 
     // static spanReg = /./g;
     // static codeReg = /./g;
@@ -44,7 +45,7 @@ class Translator {
     }
 
     static toDelete(content) {
-        return content.replaceAll(this.deleteReg, '<del>$1</del>');
+        return content.replaceAll(this.deleteReg, '<s>$1</s>');
     }
 
     static toSup(content) {
@@ -72,7 +73,7 @@ class Translator {
                     let parsedLinkName = this.parseAnchorLink(linkName);
                     return `<a title="${parsedLinkName}" href="${parsedLinkName}">${linkName}</a>`;
                 } else {
-                    // name | link 
+                    // name | link
                     link = this.parseAnchorLink(link);
                     return `<a title="${link}" href="${link}">${name}</a>`;
                 }
@@ -137,30 +138,33 @@ class Translator {
         for (let i = 0; i < indexList.length; i++) {
             if (typeof indexList[i] === 'number') {
                 content = content.concat(
-                    `<p><a href="#n-${indexList[i]}">[${indexList[i]}]</a> ${noteList[i]}</p>`
+                    `<p><a id="f-${indexList[i]}" href="#n-${indexList[i]}">[${indexList[i]}]</a> ${noteList[i]}</p>`
                 );
             } else {
-                const footAnchor = this.makeFootAnchor(i+1, indexMap.get(i+1));
+                const footAnchor = this.makeFootAnchor(
+                    i + 1,
+                    indexMap.get(i + 1)
+                );
                 content = content.concat(
                     `<p>[${indexList[i]}]<sup>${footAnchor}</sup> ${noteList[i]}</p>`
                 );
             }
         }
-        content += '</div>'
+        content += '</div>';
         return content;
     }
 
     /**
-     * 
+     *
      * @param {number} indexOrder - The main number of order of the note
-     * @param {number} indexCnt - The total count of the same indexes 
+     * @param {number} indexCnt - The total count of the same indexes
      * @returns {string} HTML elements of the footnote
      */
     static makeFootAnchor(indexOrder, indexCnt) {
         let footAnchor = '';
         for (let i = 1; i <= indexCnt; i++) {
             footAnchor = footAnchor.concat(
-                ` <a href="#n-${indexOrder}-${i}">${indexOrder}.${i}</a>`
+                ` <a id="f-${indexOrder}-${i}" href="#n-${indexOrder}-${i}">${indexOrder}.${i}</a>`
             );
         }
         return footAnchor;
@@ -173,10 +177,7 @@ class Translator {
         let parsedContent = content.replaceAll(
             this.titleReg,
             (_match, capture, content) => {
-                if (
-                    capture.length <= titleLevel + 1 &&
-                    capture.length >= 1
-                ) {
+                if (capture.length <= titleLevel + 1 && capture.length >= 1) {
                     titleLevel = capture.length;
                     titleIndex = this.changeTitleIndex(titleIndex, titleLevel);
                     titleMap.set(titleIndex, content);
@@ -230,14 +231,19 @@ class Translator {
     }
 
     static addTitleIndex(titleMap) {
-        let content = '<div id="index">';
-        for (let [index, title] of titleMap) {
-            const idx = this.convertIndex(index);
-            content = content.concat(
-                `<p><a href="#p-${idx.type2}">${idx.type1}</a> ${title}</p>`
-            );
+        if (titleMap.size === 0) {
+            // If there isn't any title
+            return '<div id="index" style="display: none;"></div>';
+        } else {
+            let content = '<div id="index">';
+            for (let [index, title] of titleMap) {
+                const idx = this.convertIndex(index);
+                content = content.concat(
+                    `<p><a href="#p-${idx.type2}">${idx.type1}</a> ${title}</p>`
+                );
+            }
+            return content.concat('</div><hr id="index-content">');
         }
-        return content.concat('</div><hr id="index-content">');
     }
 
     /*
@@ -519,7 +525,6 @@ class Translator {
 
     /** Make paragraphs between all h elements. */
     static toParagraph(content) {
-
         content = content.replaceAll(this.paragraphReg, '<div>$1</div>');
 
         return content;
