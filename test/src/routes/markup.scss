@@ -1,0 +1,106 @@
+@font-face {
+    font-family: 'LINESeedKR';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_11-01@1.0/LINESeedKR-Th.woff2') format('woff2');
+    font-weight: 100;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'LINESeedKR';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_11-01@1.0/LINESeedKR-Rg.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'LINESeedKR';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_11-01@1.0/LINESeedKR-Bd.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+
+* {
+    font-family: 'LINESeedKR' !important;
+}
+
+html {
+    font-size: 20px;
+    background-color: rgb(245, 245, 245);
+}
+
+a {
+    text-decoration-line: none;
+    /* color: rgb(0, 132, 202); */
+    color: rgb(21, 192, 242);
+}
+
+a:hover{
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.2rem;
+    text-decoration-thickness: 0.05rem;
+}
+
+s {
+    color: grey;
+    text-decoration-thickness: 0.05rem;
+}
+
+s:hover {
+    text-decoration: none;
+}
+
+u {
+    text-underline-offset: 0.2rem;
+    text-decoration-thickness: 0.05rem;
+}
+
+hr {
+    border: grey .05rem solid;
+}
+
+div {
+    font-size: 1rem;
+}
+
+p {
+    margin: 0;
+}
+
+h2, h3, h4, h5, h6 {
+    border-bottom: .05rem grey solid;
+    padding: 0rem .5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h3 {
+    font-size: 1.8rem;
+}
+
+h4 {
+    font-size: 1.6rem;
+}
+
+h5 {
+    font-size: 1.4rem;
+}
+
+h6 {
+    font-size: 1.2rem;
+}
+
+#index-content {
+    display: none;
+}
+
+#index {
+    border: .05rem solid grey;
+    width: fit-content;
+    padding: .8rem .8rem .5rem .8rem;
+    margin: 1rem 0rem;
+}
