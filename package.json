@@ -1,6 +1,6 @@
 {
   "name": "ken-markup",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Markup language for ken-system",
   "main": "index.js",
   "type": "module",
