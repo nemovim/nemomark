@@ -13,21 +13,26 @@ class Translator {
     static paragraphReg =
         /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
 
+    static uListReg = /(?<=\n|:\(|\)\(|:{|}{)(?<!\\):\((.(?:(?<!:\().(?!:\()|\n)*?)\):(?=\n|\):|}:)/g;
+    static splitUListReg = /(?<=\n)\)\((?=.)/g;
+    static oListReg = /(?<=\n|<li.*?>|\)\(|:{|}{)(?<!\\):{(.(?:(?<!:{).(?!:{)|\n)*?)}:(?=\n|<\/li>|}:)/g;
+    static splitOListReg = /(?<=.)}\n?(?=.){/g;
+    static brListReg = /(<\/ul>|<\/ol>)\n/g;
+
+    static tableReg = /./g;
+    static splitTrReg = /./g;
+    static splitTdReg = /./g;
+    static tdReg = /./g;
+
     // static spanReg = /./g;
     // static codeReg = /./g;
     // static quoteReg = /./g;
     // static mathReg = /./g;
     // static searchUListReg = /./g;
-    // static uListReg = /./g;
     // static splitUListReg = /./g;
     // static searchOListReg = /./g;
-    // static oListReg = /./g;
     // static splitOListReg = /./g;
     // static searchTableReg = /./g;
-    // static tableReg = /./g;
-    // static splitTrReg = /./g;
-    // static splitTdReg = /./g;
-    // static tdReg = /./g;
     // static imageReg = /./g;
     // static highClassReg = /./g;
     // static frameReg = /./g;
@@ -171,7 +176,7 @@ class Translator {
     }
 
     static toTitle(content) {
-        let titleLevel = 1; // 1 ~ 5
+        let titleLevel = 0; // 1 ~ 5
         let titleMap = new Map(); // { titleIndex: title } | ex) {10000: 'a', 11000: 'b', ... }
         let titleIndex = 0;
         let parsedContent = content.replaceAll(
@@ -246,42 +251,100 @@ class Translator {
         }
     }
 
-    /*
-    static checkInsideLoop(searchReg, reg, content, TranslatorFunction) {
-        return new Promise((resolve, reject) => {
-            while (true) {
-                if (content.search(searchReg) !== -1) {
-                    // There is something to change.
-                    let parsedContent = content.replaceAll(
-                        reg,
-                        function (_match, capture) {
-                            if (capture.search(searchReg) !== -1) {
-                                // It isn't what Translator most inside.
-                                return _match;
-                            } else {
-                                // It must be changed.
-                                return TranslatorFunction(capture);
-                            }
-                        }
-                    );
-                    if (parsedContent === content) {
-                        // It can't happen.
-                        // Translator Error!
-                        alert(
-                            'You mistaked the wiki Translator!! Try again after checking it.'
-                        );
-                        reject();
-                    } else {
-                        resolve(parsedContent);
+    static checkInsideLoop(reg, content, translateFunction) {
+        let parsedContent = content;
+        while (true) {
+            if (parsedContent.search(reg) !== -1) {
+                // There is something to change.
+                // Change them from inside.
+                parsedContent = parsedContent.replaceAll(
+                    reg,
+                    (_match, capture) => {
+                            return translateFunction(capture);
                     }
-                } else {
-                    // There are no more things to change.
-                    resolve(content);
-                }
+                );
+            } else {
+                // There are no more things to change.
+                break;
             }
-        });
+        }
+        return parsedContent;
     }
 
+    /**
+     * Connect the items in the item list.
+     * @param {string} type - The type of the list | 'ul' or 'ol'
+     * @param {Array} liList - The list of items
+     * @returns A HTML content of the list.
+     */
+    static concatListItems(type, liList) {
+        let parsedContent = `<${type}>`;
+        for (let item of liList) {
+            parsedContent = parsedContent.concat(`<li>${item}</li>`);
+        }
+        parsedContent = parsedContent.concat(`</${type}>`);
+        return parsedContent;
+    }
+
+    static toUList(content) {
+        return this.checkInsideLoop(
+            this.uListReg,
+            content,
+            (capture) => {
+                return this.concatListItems('ul', capture.split(this.splitUListReg));
+            }
+        );
+    }
+
+    static toOList(content) {
+        return this.checkInsideLoop(
+            this.oListReg,
+            content,
+            (capture) => {
+                return this.concatListItems('ol', capture.split(this.splitOListReg));
+            }
+        );
+    }
+
+    static toTable(content) {
+        // return Promise((resolve) => {
+        //     this.checkInsideLoop(
+        //         this.searchTableReg,
+        //         this.tableReg,
+        //         content,
+        //         (capture) => {
+        //             let trList = capture.split(this.splitTrReg);
+        //             let content = '<table><tbody>';
+        //             for (let tr of trList) {
+        //                 content = content.concat('<tr>');
+        //                 let tdList = tr.split(this.splitTdReg);
+        //                 for (let td of tdList) {
+        //                     content = content.concat(
+        //                         td.replaceAll(
+        //                             this.tdReg,
+        //                             (_match, col, row, text) => {
+        //                                 col ??= 1;
+        //                                 row ??= 1;
+        //                                 return `<td colspan="${col}" rowspan="${row}">${text}</td>`;
+        //                             }
+        //                         )
+        //                     );
+        //                 }
+        //             }
+        //             content = content.concat('</tbody></table>');
+        //             return content;
+        //         }
+        //     ).then((content) => {
+        //         content = content;
+        //         resolve();
+        //     });
+        // });
+        return content;
+    }
+
+    // /^(?:([^\]]+)\|)?(?:([0-9]*)\]([0-9]*)\])?((?:.|\n)+)/g, to use for table
+
+    /*
     static toSpan() {
         return new Promise((resolve) => {
             let parsedContent = content.replaceAll(
@@ -365,86 +428,6 @@ class Translator {
     }
 
 
-    static toUList() {
-        return Promise((resolve) => {
-            Translator.checkInsideLoop(
-                Translator.searchUListReg,
-                Translator.uListReg,
-                content,
-                (capture) => {
-                    let uList = capture.split(Translator.splitUListReg);
-                    let content = '<ul>';
-                    for (let text of uList) {
-                        content = content.concat(`<li>${text}</li>`);
-                    }
-                    content = content.concat('</ul>');
-                    return content;
-                }
-            ).then((content) => {
-                content = content;
-                resolve();
-            });
-        });
-    }
-
-    static toOList() {
-        return Promise((resolve) => {
-            Translator.checkInsideLoop(
-                Translator.searchOListReg,
-                Translator.oListReg,
-                content,
-                (capture) => {
-                    let oList = capture.split(Translator.splitOListReg);
-                    let content = '<ol>';
-                    for (let text of oList) {
-                        content = content.concat(`<li>${text}</li>`);
-                    }
-                    content = content.concat('</ol>');
-                    return content;
-                }
-            ).then((content) => {
-                content = content;
-                resolve();
-            });
-        });
-    }
-
-    static toTable() {
-        return Promise((resolve) => {
-            Translator.checkInsideLoop(
-                Translator.searchTableReg,
-                Translator.tableReg,
-                content,
-                (capture) => {
-                    let trList = capture.split(Translator.splitTrReg);
-                    let content = '<table><tbody>';
-                    for (let tr of trList) {
-                        content = content.concat('<tr>');
-                        let tdList = tr.split(Translator.splitTdReg);
-                        for (let td of tdList) {
-                            content = content.concat(
-                                td.replaceAll(
-                                    Translator.tdReg,
-                                    (_match, col, row, text) => {
-                                        col ??= 1;
-                                        row ??= 1;
-                                        return `<td colspan="${col}" rowspan="${row}">${text}</td>`;
-                                    }
-                                )
-                            );
-                        }
-                    }
-                    content = content.concat('</tbody></table>');
-                    return content;
-                }
-            ).then((content) => {
-                content = content;
-                resolve();
-            });
-        });
-    }
-
-    // /^(?:([^\]]+)\|)?(?:([0-9]*)\]([0-9]*)\])?((?:.|\n)+)/g, to use for table
 
     // static getImageUrl(name) {
     //     return new Promise((resolve, reject) => {
@@ -494,6 +477,12 @@ class Translator {
 
     */
 
+    /** To clear HTML content by removing unnecessary white spaces. */
+    static toClear(content) {
+        content = content.replaceAll(this.brListReg, '$1');
+        return content;
+    }
+
     /** Remove \\ before the grammars at the last */
     static toNormal(content) {
         const boldReg = /\\(\*\*(?:.|\n)+?\*\*)/g;
@@ -507,6 +496,9 @@ class Translator {
         const anchorReg = /\\(\[\[(?:[^|]+?|.+?(?<!\\)\|.+?)]])/g;
         const noteReg = /\\(\(\((?:[^|]+?|.+?(?<!\\)\|.*?)\)\))/g;
         const titleReg = /(?<=\n)\\(={2,6} .+)(?=\n)/g;
+        const uListReg = /(?<=\n|:\(|\)\(|:{|}{)\\(:\(.(?:(?<!:\().(?!:\()|\n)*?\):)(?=\n|\):|}:)/g;
+        const oListReg = /(?<=\n|<li.*?>|\)\(|:{|}{)\\(:{.(?:(?<!:{).(?!:{)|\n)*?}:)(?=\n|<\/li>|}:)/g;
+        const tableReg = /./g;
 
         content = content.replaceAll(boldReg, '$1');
         content = content.replaceAll(italicReg, '$1');
@@ -519,6 +511,9 @@ class Translator {
         content = content.replaceAll(anchorReg, '$1');
         content = content.replaceAll(noteReg, '$1');
         content = content.replaceAll(titleReg, '$1');
+        content = content.replaceAll(uListReg, '$1');
+        content = content.replaceAll(oListReg, '$1');
+        // content = content.replaceAll(tableReg, '$1');
 
         return content;
     }
@@ -551,18 +546,19 @@ class Translator {
             content = this.toAnchor(content);
             content = this.toNote(content);
             content = this.toTitle(content);
+            content = this.toUList(content); // It should be done before oList.
+            content = this.toOList(content); // It should be done after uList.
+            // content = this.toTable(content);
 
             // content = this.toSpan(content);
             // content = this.toImage(content);
             // content = this.toQuote(content);
-            // content = this.toOList(content);
-            // content = this.toUList(content);
-            // content = this.toTable(content);
             // content = this.toFrame(content);
             // content = this.toHighClass(content);
             // content = this.toMath(content);
             // content = this.toCode(content);
 
+            content = this.toClear(content);
             content = this.toNormal(content); // This should be the second from the last
             content = this.toParagraph(content); // This should be the last
 
