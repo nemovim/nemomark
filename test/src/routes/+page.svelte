@@ -1,28 +1,21 @@
 <script>
-    import Translator from 'ken-markup'
+    import Translator from 'ken-markup';
 
     let translated = '여기에 번역된 결과가 나타납니다.';
-    let content = "";
+    let content = '';
 
     function translate() {
         translated = Translator.translate(content).content;
     }
-    
-    function handleKeyUp(e) {
-        console.log(e);
-        if (e.code === 'Enter' && e.ctrlKey) {
-            translate();
-        }
-    }
 
-</script>
+    // function handleKeyUp(e) {
+    //     console.log(e);
+    //     if (e.code === 'Enter' && e.ctrlKey) {
+    //         translate();
+    //     }
+    // }
 
-<h1><span style="color: rgb(0, 50, 104);">K</span><span style="color: rgb(0, 132, 202);">E</span><span style="color: rgb(21, 192, 242);">N</span>-MARKUP TEST</h1>
-
-<section>
-<article id="input">
-
-<pre>
+    let description = `\\ 문법 취소
 **굵게**
 //기울임//
 ~~취소선~~
@@ -32,19 +25,37 @@ __밑줄__
 = 제목
 ---- 구분선
 :: 들여쓰기
-</pre>
+:(순서 없는 목록
+)(두 번째 항목):
+:{순서 있는 목록
+}{두 번째 항목}:
+`;
 
-<textarea placeholder="내용을 입력하세요" name="content" bind:value={content} on:keyup={translate} />
+</script>
 
-</article>
+<h1>
+    <span style="color: rgb(0, 50, 104);">K</span><span
+        style="color: rgb(0, 132, 202);">E</span
+    ><span style="color: rgb(21, 192, 242);">N</span>-MARKUP TEST
+</h1>
 
-<!-- <button id="translateBtn" on:click={translate()}>Translate!</button> -->
+<section>
+    <article id="input">
+        <pre contenteditable="false" bind:innerText={description} />
 
-    <article contenteditable="false" bind:innerHTML={translated} id="output"></article>
+        <textarea
+            placeholder="내용을 입력하세요"
+            name="content"
+            bind:value={content}
+            on:keyup={translate}
+        />
+    </article>
+
+    <article contenteditable="false" bind:innerHTML={translated} id="output" />
 </section>
 
 <style lang="scss">
-    @import "./markup.scss";
+    @import './markup.scss';
 
     section {
         display: flex;
@@ -58,36 +69,36 @@ __밑줄__
         background-color: white;
         width: fit-content;
         margin: 2rem auto 1rem auto;
-        padding: .7rem 1.2rem .3rem 1.2rem;
+        padding: 0.7rem 1.2rem 0.3rem 1.2rem;
         /* border: solid rgb(21, 192, 242) .5rem; */
-        border: solid black .3rem;
+        border: solid black 0.3rem;
         border-radius: 1rem;
     }
 
     pre {
-        margin: .5rem;
+        margin: 0.5rem;
         padding: 1rem;
         background-color: white;
-        border: grey solid .05rem;
+        border: grey solid 0.05rem;
     }
 
     textarea {
-        margin: .5rem;
+        margin: 0.5rem;
         min-width: 30rem;
         font-size: 1rem;
-        padding: .5rem;
+        padding: 0.5rem;
     }
 
     #input {
         display: flex;
         justify-content: center;
-        margin: .5rem;
+        margin: 0.5rem;
     }
 
     #output {
-        border: grey solid .05rem;
+        border: grey solid 0.05rem;
         padding: 1rem;
-        margin: .5rem;
+        margin: 0.5rem;
         width: 45rem;
         background-color: white;
     }
