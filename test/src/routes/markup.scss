@@ -55,6 +55,10 @@ u {
     text-decoration-thickness: 0.05rem;
 }
 
+ul, ol {
+    margin: .5rem;
+}
+
 hr {
     border: grey .05rem solid;
 }
@@ -70,8 +74,8 @@ p {
 h2, h3, h4, h5, h6 {
     border-bottom: .05rem grey solid;
     padding: 0rem .5rem;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
 }
 
 h2 {
