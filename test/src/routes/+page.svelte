@@ -2,10 +2,18 @@
     import Translator from 'ken-markup';
 
     let translated = '여기에 번역된 결과가 나타납니다.';
+    let errorMsg = '문법 오류 발생 시 여기에 표시됩니다.';
     let content = '';
 
     function translate() {
-        translated = Translator.translate(content).content;
+        const output = Translator.translate(content);
+        if (output.status) {
+            translated = output.content;
+            errorMsg = '문법 오류 발생 시 여기에 표시됩니다.';
+        } else {
+            errorMsg = output.error;
+            console.error(errorMsg);
+        }
     }
 
     // function handleKeyUp(e) {
@@ -29,8 +37,9 @@ __밑줄__
 )(두 번째 항목):
 :{순서 있는 목록
 }{두 번째 항목}:
+:[표][가로 2
+][세로 1][세로 2]:
 `;
-
 </script>
 
 <h1>
@@ -51,6 +60,9 @@ __밑줄__
         />
     </article>
 
+    <article>
+        <p contenteditable="false" bind:innerText={errorMsg} id="errorP" />
+    </article>
     <article contenteditable="false" bind:innerHTML={translated} id="output" />
 </section>
 
@@ -76,29 +88,39 @@ __밑줄__
     }
 
     pre {
-        margin: 0.5rem;
+        margin: 0;
+        margin-right: 0.5rem;
         padding: 1rem;
         background-color: white;
         border: grey solid 0.05rem;
     }
 
     textarea {
-        margin: 0.5rem;
+        margin: 0;
+        margin-left: 0.5rem;
         min-width: 30rem;
         font-size: 1rem;
         padding: 0.5rem;
     }
 
     #input {
+        margin: 1rem;
         display: flex;
         justify-content: center;
-        margin: 0.5rem;
+    }
+
+    #errorP {
+        color: red;
+        font-weight: 700;
+        font-size: 0.8rem;
+        background-color: rgb(255, 230, 230);
+        padding: 0.2rem 0.5rem;
     }
 
     #output {
+        margin: 1rem;
         border: grey solid 0.05rem;
         padding: 1rem;
-        margin: 0.5rem;
         width: 45rem;
         background-color: white;
     }

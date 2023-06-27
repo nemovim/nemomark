@@ -59,6 +59,18 @@ ul, ol {
     margin: .5rem;
 }
 
+table {
+    margin: .5rem;
+    border-collapse: collapse;
+}
+
+td {
+    border: solid grey .05rem;
+    background-color: rgb(245, 245, 245);
+    padding: .5rem;
+    text-align: center;
+}
+
 hr {
     border: grey .05rem solid;
 }
