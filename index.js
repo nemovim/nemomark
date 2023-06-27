@@ -13,26 +13,25 @@ class Translator {
     static paragraphReg =
         /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
 
-    static uListReg = /(?<=\n|:\(|\)\(|:{|}{)(?<!\\):\((.(?:(?<!:\().(?!:\()|\n)*?)\):(?=\n|\):|}:)/g;
+    static uListReg =
+        /(?<=\n|:\(|\)\(|:{|}{)(?<!\\):\((.(?:(?<!:\().(?!:\()|\n)*?)\):(?=\n|\):|}:)/g;
     static splitUListReg = /(?<=\n)\)\((?=.)/g;
-    static oListReg = /(?<=\n|<li.*?>|\)\(|:{|}{)(?<!\\):{(.(?:(?<!:{).(?!:{)|\n)*?)}:(?=\n|<\/li>|}:)/g;
+    static oListReg =
+        /(?<=\n|<li.*?>|\)\(|:{|}{)(?<!\\):{(.(?:(?<!:{).(?!:{)|\n)*?)}:(?=\n|<\/li>|}:)/g;
     static splitOListReg = /(?<=.)}\n?(?=.){/g;
-    static brListReg = /(<\/ul>|<\/ol>)\n/g;
 
-    static tableReg = /./g;
-    static splitTrReg = /./g;
-    static splitTdReg = /./g;
-    static tdReg = /./g;
+    static tableReg =
+        /(?<=\n|<li.*?>|\)\(|}{|:\[|\]\[)(?<!\\):\[(.(?:(?<!:\[).(?!:\[)|\n)*?)\]:(?=\n|<\/li>|\]:)/g;
+    static splitTrReg = /\n\]\[/g;
+    static splitTdReg = /\]\[/g;
+    static tdReg = /^(?:([0-9]*)\[([0-9]*)\[)?((?:.|\n)+)$/g;
+
+    static brListReg = /(<\/ul>|<\/ol>|<\/table>)\n/g;
 
     // static spanReg = /./g;
     // static codeReg = /./g;
     // static quoteReg = /./g;
     // static mathReg = /./g;
-    // static searchUListReg = /./g;
-    // static splitUListReg = /./g;
-    // static searchOListReg = /./g;
-    // static splitOListReg = /./g;
-    // static searchTableReg = /./g;
     // static imageReg = /./g;
     // static highClassReg = /./g;
     // static frameReg = /./g;
@@ -260,7 +259,7 @@ class Translator {
                 parsedContent = parsedContent.replaceAll(
                     reg,
                     (_match, capture) => {
-                            return translateFunction(capture);
+                        return translateFunction(capture);
                     }
                 );
             } else {
@@ -278,71 +277,84 @@ class Translator {
      * @returns A HTML content of the list.
      */
     static concatListItems(type, liList) {
-        let parsedContent = `<${type}>`;
+        let listHTML = `<${type}>`;
         for (let item of liList) {
-            parsedContent = parsedContent.concat(`<li>${item}</li>`);
+            listHTML = listHTML.concat(`<li>${item}</li>`);
         }
-        parsedContent = parsedContent.concat(`</${type}>`);
-        return parsedContent;
+        listHTML = listHTML.concat(`</${type}>`);
+        return listHTML;
     }
 
     static toUList(content) {
-        return this.checkInsideLoop(
-            this.uListReg,
-            content,
-            (capture) => {
-                return this.concatListItems('ul', capture.split(this.splitUListReg));
-            }
-        );
+        return this.checkInsideLoop(this.uListReg, content, (capture) => {
+            return this.concatListItems(
+                'ul',
+                capture.split(this.splitUListReg)
+            );
+        });
     }
 
     static toOList(content) {
-        return this.checkInsideLoop(
-            this.oListReg,
-            content,
-            (capture) => {
-                return this.concatListItems('ol', capture.split(this.splitOListReg));
-            }
-        );
+        return this.checkInsideLoop(this.oListReg, content, (capture) => {
+            return this.concatListItems(
+                'ol',
+                capture.split(this.splitOListReg)
+            );
+        });
+    }
+
+    static checkTableConflict(content) {
+        const ulCnt = (content.match(/<ul.*?>/g) || []).length;
+        const ulEndCnt = (content.match(/<\/ul>/g) || []).length;
+
+        const olCnt = (content.match(/<ol.*?>/g) || []).length;
+        const olEndCnt = (content.match(/<\/ol>/g) || []).length;
+
+        const liCnt = (content.match(/<li.*?>/g) || []).length;
+        const liEndCnt = (content.match(/<\/li>/g) || []).length;
+
+        const liEndLiCnt = (content.match(/<\/li><li.*?>/g) || []).length;
+
+        if (ulCnt !== ulEndCnt) return true;
+
+        if (olCnt !== olEndCnt) return true;
+
+        if (liCnt !== liEndCnt) return true;
+
+        if (liEndLiCnt !== 0 && ulCnt == 0 && olCnt == 0) return true;
+
+        return false;
     }
 
     static toTable(content) {
-        // return Promise((resolve) => {
-        //     this.checkInsideLoop(
-        //         this.searchTableReg,
-        //         this.tableReg,
-        //         content,
-        //         (capture) => {
-        //             let trList = capture.split(this.splitTrReg);
-        //             let content = '<table><tbody>';
-        //             for (let tr of trList) {
-        //                 content = content.concat('<tr>');
-        //                 let tdList = tr.split(this.splitTdReg);
-        //                 for (let td of tdList) {
-        //                     content = content.concat(
-        //                         td.replaceAll(
-        //                             this.tdReg,
-        //                             (_match, col, row, text) => {
-        //                                 col ??= 1;
-        //                                 row ??= 1;
-        //                                 return `<td colspan="${col}" rowspan="${row}">${text}</td>`;
-        //                             }
-        //                         )
-        //                     );
-        //                 }
-        //             }
-        //             content = content.concat('</tbody></table>');
-        //             return content;
-        //         }
-        //     ).then((content) => {
-        //         content = content;
-        //         resolve();
-        //     });
-        // });
-        return content;
+        return this.checkInsideLoop(this.tableReg, content, (capture) => {
+            let trList = capture.split(this.splitTrReg);
+            let tableHTML = '<table><tbody>';
+            for (let tr of trList) {
+                tableHTML = tableHTML.concat('<tr>');
+                let tdList = tr.split(this.splitTdReg);
+                for (let td of tdList) {
+                    if (this.checkTableConflict(td)) {
+                        // Grammar error!
+                        throw new Error('Table and list grammar conflicted!');
+                    } else {
+                        tableHTML = tableHTML.concat(
+                            td.replaceAll(
+                                this.tdReg,
+                                (_match, col, row, text) => {
+                                    col = !col ? 1 : col;
+                                    row = !row ? 1 : row;
+                                    return `<td colspan="${col}" rowspan="${row}">${text}</td>`;
+                                }
+                            )
+                        );
+                    }
+                }
+            }
+            tableHTML = tableHTML.concat('</tbody></table>');
+            return tableHTML;
+        });
     }
-
-    // /^(?:([^\]]+)\|)?(?:([0-9]*)\]([0-9]*)\])?((?:.|\n)+)/g, to use for table
 
     /*
     static toSpan() {
@@ -496,9 +508,12 @@ class Translator {
         const anchorReg = /\\(\[\[(?:[^|]+?|.+?(?<!\\)\|.+?)]])/g;
         const noteReg = /\\(\(\((?:[^|]+?|.+?(?<!\\)\|.*?)\)\))/g;
         const titleReg = /(?<=\n)\\(={2,6} .+)(?=\n)/g;
-        const uListReg = /(?<=\n|:\(|\)\(|:{|}{)\\(:\(.(?:(?<!:\().(?!:\()|\n)*?\):)(?=\n|\):|}:)/g;
-        const oListReg = /(?<=\n|<li.*?>|\)\(|:{|}{)\\(:{.(?:(?<!:{).(?!:{)|\n)*?}:)(?=\n|<\/li>|}:)/g;
-        const tableReg = /./g;
+        const uListReg =
+            /(?<=\n|:\(|\)\(|:{|}{)\\(:\(.(?:(?<!:\().(?!:\()|\n)*?\):)(?=\n|\):|}:)/g;
+        const oListReg =
+            /(?<=\n|<li.*?>|\)\(|:{|}{)\\(:{.(?:(?<!:{).(?!:{)|\n)*?}:)(?=\n|<\/li>|}:)/g;
+        const tableReg =
+            /(?<=\n|<li.*?>|\)\(|}{|:\[|\]\[)\\(:\[.(?:(?<!:\[).(?!:\[)|\n)*?\]:)(?=\n|<\/li>|\]:)/g;
 
         content = content.replaceAll(boldReg, '$1');
         content = content.replaceAll(italicReg, '$1');
@@ -513,7 +528,7 @@ class Translator {
         content = content.replaceAll(titleReg, '$1');
         content = content.replaceAll(uListReg, '$1');
         content = content.replaceAll(oListReg, '$1');
-        // content = content.replaceAll(tableReg, '$1');
+        content = content.replaceAll(tableReg, '$1');
 
         return content;
     }
@@ -530,6 +545,8 @@ class Translator {
             content: '',
             highClassList: [],
             keywordList: [],
+            status: true,
+            error: '',
         };
 
         try {
@@ -548,7 +565,7 @@ class Translator {
             content = this.toTitle(content);
             content = this.toUList(content); // It should be done before oList.
             content = this.toOList(content); // It should be done after uList.
-            // content = this.toTable(content);
+            content = this.toTable(content); // It should be done after above two types lists.
 
             // content = this.toSpan(content);
             // content = this.toImage(content);
@@ -558,7 +575,7 @@ class Translator {
             // content = this.toMath(content);
             // content = this.toCode(content);
 
-            content = this.toClear(content);
+            content = this.toClear(content); // This should be done after from lists and table.
             content = this.toNormal(content); // This should be the second from the last
             content = this.toParagraph(content); // This should be the last
 
@@ -567,11 +584,13 @@ class Translator {
             content = content.replaceAll(/\n/g, '<br>');
 
             result.content = content;
+            result.status = true;
 
             return result;
         } catch (e) {
-            alert(e);
-            throw e;
+            result.status = false;
+            result.error = e;
+            return result;
         }
     }
 }
