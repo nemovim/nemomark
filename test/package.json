@@ -20,6 +20,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"ken-markup": "file:.."
+		"ken-markup": "^0.1.3"
 	}
 }
