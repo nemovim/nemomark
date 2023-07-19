@@ -1,8 +1,8 @@
 # ken-markup
 
-ken-markup is a markup language made for family websites of ken-system.
+ken-markup is a markup language made for family websites of ken-zone.
 
-## Instruction 
+## Usage 
 
 1. Install the module 
 
@@ -59,14 +59,60 @@ ken-markup is a markup language made for family websites of ken-system.
     -> [index] // The content will be the note
     ```
 
-* = title
+* \# title
 
-    Title grammar has five levels which can be changed by a count of `=`.
+    Title grammar has five levels which can be changed by a count of `#`.
 
     ```
     ex)
-    = title 1.
-    == title 1.1.
-    == title 1.2.
-    = title 2.
+    # title 1.
+    ## title 1.1.
+    ## title 1.2.
+    # title 2.
     ```
+
+* :[table]:
+
+    Table grammar starts with `:[` and ends with `]:`.
+
+    To divide columns, insert `][` between the line.
+
+    To divide rows, insert `\n][` into the end of the line that you want to break.
+
+    ```
+    ex)
+    :[cell(0,0)][cell(0,1)
+    ][cell(1,0)][cell(1,1)]:
+    ```
+
+* :(unordered list):
+
+    Unordered list grammar starts with `:(` and ends with `):`.
+
+    To divide items, insert `\n)(` into the end of the line that you want to break.
+
+    ```
+    ex)
+    :(item1
+    )(item2):
+    ```
+
+* :{ordered list}:
+
+    The difference between ordered and unordered is only the change from `(` to `{`.
+
+    ```
+    ex)
+    :{item1
+    }{item2}:
+    ```
+
+* horizontal rule
+
+    Four `-` are converted into a horizontal rule, which can be used to seperate sections or contents.
+
+    ```
+    ex)
+    ----
+    ```
+    *Before this grammar, there should be a line break (\n).*
