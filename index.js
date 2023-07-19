@@ -9,9 +9,7 @@ class Translator {
     static hrReg = /(?<=\n)(?<!\\)(----\n)/g;
     static anchorReg = /(?<!\\)\[\[(?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.+?)))]]/g;
     static noteReg = /(?<!\\)\(\((?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.*?)))\)\)/g;
-    static titleReg = /(?<=\n)(?<!\\)(={1,5}) (.+)(?=\n)/g;
-    static paragraphReg =
-        /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
+    static titleReg = /(?<=\n)(?<!\\)(#{1,5}) (.+)(?=\n)/g;
 
     static uListReg =
         /(?<=\n|:\(|\)\(|:{|}{)(?<!\\):\((.(?:(?<!:\().(?!:\()|\n)*?)\):(?=\n|\):|}:)/g;
@@ -27,6 +25,9 @@ class Translator {
     static tdReg = /^(?:([0-9]*)\[([0-9]*)\[)?((?:.|\n)+)$/g;
 
     static brListReg = /(<\/ul>|<\/ol>|<\/table>)\n/g;
+
+    static paragraphReg =
+        /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
 
     // static spanReg = /./g;
     // static codeReg = /./g;
@@ -495,7 +496,7 @@ class Translator {
         return content;
     }
 
-    /** Remove \\ before the grammars at the last */
+    /** Remove \ before the grammars at the last */
     static toNormal(content) {
         const boldReg = /\\(\*\*(?:.|\n)+?\*\*)/g;
         const italicReg = /\\(\/\/(?:.|\n)+?\/\/)/g;
@@ -507,7 +508,7 @@ class Translator {
         const hrReg = /(?<=\n)\\(----)(?=\n)/g;
         const anchorReg = /\\(\[\[(?:[^|]+?|.+?(?<!\\)\|.+?)]])/g;
         const noteReg = /\\(\(\((?:[^|]+?|.+?(?<!\\)\|.*?)\)\))/g;
-        const titleReg = /(?<=\n)\\(={2,6} .+)(?=\n)/g;
+        const titleReg = /(?<=\n)\\(#{2,6} .+)(?=\n)/g;
         const uListReg =
             /(?<=\n|:\(|\)\(|:{|}{)\\(:\(.(?:(?<!:\().(?!:\()|\n)*?\):)(?=\n|\):|}:)/g;
         const oListReg =
