@@ -111,10 +111,10 @@ ken-markup is a markup language made for family websites of ken-zone.
 
 * horizontal rule
 
-    Four `-` are converted into a horizontal rule, which can be used to seperate sections or contents.
+    Four `-` are converted into a horizontal rule, which can be used to separate sections or contents.
 
     ```
     ex)
     ----
     ```
-    *Before this grammar, there should be a line break (\n).*
+    *There should be a line break (\n) before this grammar.*
