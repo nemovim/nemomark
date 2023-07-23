@@ -24,18 +24,12 @@ class Translator {
     static splitTdReg = /\]\[/g;
     static tdReg = /^(?:([0-9]*)\[([0-9]*)\[)?((?:.|\n)+)$/g;
 
-    static brListReg = /(<\/ul>|<\/ol>|<\/table>)\n/g;
 
-    static paragraphReg =
-        /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
-
-    // static spanReg = /./g;
+    // static imageReg = /./g;
     // static codeReg = /./g;
     // static quoteReg = /./g;
+    // static spanReg = /./g;
     // static mathReg = /./g;
-    // static imageReg = /./g;
-    // static highClassReg = /./g;
-    // static frameReg = /./g;
 
     static toBold(content) {
         return content.replaceAll(this.boldReg, '<strong>$1</strong>');
@@ -358,11 +352,20 @@ class Translator {
     }
 
     /*
-    static toSpan() {
-        return new Promise((resolve) => {
+
+    static toImage() {
+        return new Promise(async (resolve, reject) => {
+            let imageNameList = [];
+            content.replaceAll(Translator.imageReg, (_match, imageName) => {
+                imageNameList.push(Translator.getImageUrl(imageName));
+                return _match;
+            });
+            let imageUrlList = await Promise.all(imageNameList);
             let parsedContent = content.replaceAll(
-                Translator.spanReg,
-                '<span style="$1">$2</span>'
+                Translator.imageReg,
+                (_match, imageName, imageStyle) => {
+                    return `<img class="docImg" src="${imageUrlList.shift()}" style="${imageStyle}" alt="X">`;
+                }
             );
             content = parsedContent;
             resolve();
@@ -403,6 +406,17 @@ class Translator {
         });
     }
 
+    static toSpan() {
+        return new Promise((resolve) => {
+            let parsedContent = content.replaceAll(
+                Translator.spanReg,
+                '<span style="$1">$2</span>'
+            );
+            content = parsedContent;
+            resolve();
+        });
+    }
+
     static toMath() {
         return new Promise((resolve, reject) => {
             let parsedContent = content.replaceAll(
@@ -421,74 +435,10 @@ class Translator {
             resolve();
         });
     }
-    static toImage() {
-        return new Promise(async (resolve, reject) => {
-            let imageNameList = [];
-            content.replaceAll(Translator.imageReg, (_match, imageName) => {
-                imageNameList.push(Translator.getImageUrl(imageName));
-                return _match;
-            });
-            let imageUrlList = await Promise.all(imageNameList);
-            let parsedContent = content.replaceAll(
-                Translator.imageReg,
-                (_match, imageName, imageStyle) => {
-                    return `<img class="docImg" src="${imageUrlList.shift()}" style="${imageStyle}" alt="X">`;
-                }
-            );
-            content = parsedContent;
-            resolve();
-        });
-    }
-
-
-
-    // static getImageUrl(name) {
-    //     return new Promise((resolve, reject) => {
-    //         Translator.firebase
-    //             .fstorage()
-    //             .child('image/' + name)
-    //             .getDownloadURL()
-    //             .then((url) => resolve)
-    //             .catch((error) => reject);
-    //         // width 최소 20rem click시 해당 이미지 문서로 이동.
-    //     });
-    // }
-
-    static toHighClass() {
-        return new Promise((resolve, reject) => {
-            let highClassList = [];
-            let parsedContent = content.replaceAll(
-                Translator.highClassReg,
-                (_match, capture) => {
-                    highClassList.push(capture);
-                    return '';
-                }
-            );
-            parsedContent =
-                Translator.makeHighClassContent(highClassList).concat(parsedContent);
-            content = parsedContent;
-            resolve();
-        });
-    }
-
-    static makeHighClassContent(highClassList) {
-        let content = '<div>분류:&nbsp;';
-        for (let highClass of highClassList) {
-            content = content.concat(
-                `<a href="w/분류:${highClass} title="분류:${highClass}>${highClass}</a>`
-            );
-        }
-        content = content.concat('</div><hr>');
-        return content;
-    }
-
-    static toFrame() {
-        return new Promise((resolve, reject) => {
-            // TODO: to frame.
-        });
-    }
 
     */
+
+    static brListReg = /(<\/ul>|<\/ol>|<\/table>)\n/g;
 
     /** To clear HTML content by removing unnecessary white spaces. */
     static toClear(content) {
@@ -508,7 +458,7 @@ class Translator {
         const hrReg = /(?<=\n)\\(----)(?=\n)/g;
         const anchorReg = /\\(\[\[(?:[^|]+?|.+?(?<!\\)\|.+?)]])/g;
         const noteReg = /\\(\(\((?:[^|]+?|.+?(?<!\\)\|.*?)\)\))/g;
-        const titleReg = /(?<=\n)\\(#{2,6} .+)(?=\n)/g;
+        const titleReg = /(?<=\n)\\(#{1,5} .+)(?=\n)/g;
         const uListReg =
             /(?<=\n|:\(|\)\(|:{|}{)\\(:\(.(?:(?<!:\().(?!:\()|\n)*?\):)(?=\n|\):|}:)/g;
         const oListReg =
@@ -533,6 +483,9 @@ class Translator {
 
         return content;
     }
+
+    static paragraphReg =
+        /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
 
     /** Make paragraphs between all h elements. */
     static toParagraph(content) {
@@ -568,13 +521,12 @@ class Translator {
             content = this.toOList(content); // It should be done after uList.
             content = this.toTable(content); // It should be done after above two types lists.
 
-            // content = this.toSpan(content);
             // content = this.toImage(content);
-            // content = this.toQuote(content);
-            // content = this.toFrame(content);
-            // content = this.toHighClass(content);
-            // content = this.toMath(content);
             // content = this.toCode(content);
+            // content = this.toQuote(content);
+
+            // content = this.toSpan(content);
+            // content = this.toMath(content);
 
             content = this.toClear(content); // This should be done after from lists and table.
             content = this.toNormal(content); // This should be the second from the last
