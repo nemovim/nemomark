@@ -6,13 +6,11 @@
     let content = '';
 
     function translate() {
-        const output = Translator.translate(content);
-        if (output.status) {
-            translated = output.content;
+        try {
+            translated = Translator.translate(content);
             errorMsg = '문법 오류 발생 시 여기에 표시됩니다.';
-        } else {
-            errorMsg = output.error;
-            console.error(errorMsg);
+        } catch(e) {
+            errorMsg = e;
         }
     }
 

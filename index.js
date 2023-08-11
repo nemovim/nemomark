@@ -494,14 +494,9 @@ class Translator {
         return content;
     }
 
-    static translate(content) {
-        const result = {
-            content: '',
-            highClassList: [],
-            keywordList: [],
-            status: true,
-            error: '',
-        };
+    static translate(_content) {
+
+        let content = _content;
 
         try {
             content = '<div id="content">\n' + content + '\n</div>';
@@ -536,14 +531,9 @@ class Translator {
 
             content = content.replaceAll(/\n/g, '<br>');
 
-            result.content = content;
-            result.status = true;
-
-            return result;
+            return content;
         } catch (e) {
-            result.status = false;
-            result.error = e;
-            return result;
+            throw new Error(e.message);
         }
     }
 }
