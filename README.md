@@ -30,7 +30,7 @@ ken-markup is a markup language made for family websites of ken-zone.
 
 * It converts text into HTML elements.
 * It supports enough grammar to write basic articles.
-* It makes an index-table and footnotes automatically.
+* It makes an index table and footnotes automatically.
 * Anyone can design it since it returns raw HTML code.
 
 ## Grammar
@@ -50,7 +50,7 @@ ken-markup is a markup language made for family websites of ken-zone.
     -> name // The href will be the link
     ```
 
-    *If you want to add some rules to the link text, you can override `parseAnchorLink` method of the class.*
+    *If you want to add some rules to the link text, you can override the `parseAnchorLink` method of the class.*
 
 * \(\(note))
 
@@ -79,24 +79,26 @@ ken-markup is a markup language made for family websites of ken-zone.
 
     To divide columns, insert `][` between the line.
 
-    To divide rows, insert `\n][` into the end of the line that you want to break.
+    To divide rows, insert `\n][` or `]\n[` into the end of the line that you want to break.
 
     ```
     ex)
     :[cell(0,0)][cell(0,1)
-    ][cell(1,0)][cell(1,1)]:
+    ][cell(1,0)][cell(1,1)]
+    [cell(2,0)][cell(2,1)]:
     ```
 
 * :(unordered list):
 
     Unordered list grammar starts with `:(` and ends with `):`.
 
-    To divide items, insert `\n)(` into the end of the line that you want to break.
+    To divide items, use `)(`, `\n)(`, or `)\n(`. You can use any of these, even mixed.
 
     ```
     ex)
     :(item1
-    )(item2):
+    )(item2)
+    (item3)(item4):
     ```
 
 * :{ordered list}:
@@ -106,10 +108,11 @@ ken-markup is a markup language made for family websites of ken-zone.
     ```
     ex)
     :{item1
-    }{item2}:
+    }{item2}
+    {item3}{item4}:
     ```
 
-* horizontal rule
+* ---- horizontal rule
 
     Four `-` are converted into a horizontal rule, which can be used to separate sections or contents.
 
@@ -118,3 +121,18 @@ ken-markup is a markup language made for family websites of ken-zone.
     ----
     ```
     *There should be a line break (\n) before this grammar.*
+
+* \ ignoring grammar
+
+    Put the `\` character in front of the grammar that you want to ignore.
+
+## Further plans
+
+* Images
+* Font-size
+* Text-align
+* Text-color
+* Indent
+* Quotes
+* Code
+* Math(equations)

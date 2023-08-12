@@ -10,16 +10,13 @@ class Translator {
     static noteReg = /(?<!\\)\(\((?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.*?)))\)\)/g;
     static titleReg = /(?<=\n)(?<!\\)(#{1,5}) (.+)(?=\n)/g;
 
-    static splitBrReg = /\n= ?/g;
+    static uListReg = /(?<!\\):\((.(?:(?<!(?<!\\):\().|\n)*?)\):/g;
+    static splitUListReg = /(?:\n?\)\(|\)\n?\()/g;
+    static oListReg = /(?<!\\):\{(.(?:(?<!(?<!\\):\{).|\n)*?)\}:/g;
+    static splitOListReg = /(?:\n?\}\{|\}\n?\{)/g;
 
-    static uListReg = /(?:^|(?<=\n))(?<!\\)\) ?((?:.|\n(?=\)|=))+)/;
-    static splitUListReg = /\n\) ?/g;
-    static oListReg = /(?:^|(?<=\n))(?<!\\)\} ?((?:.|\n(?=\}|=))+)/;
-    static splitOListReg = /\n\} ?/g;
-
-    static tableReg =
-        /(?<=\n|<li.*?>|\)\(|}{|:\[|\]\[)(?<!\\):\[(.(?:(?<!:\[).(?!:\[)|\n)*?)\]:(?=\n|<\/li>|\]:)/g;
-    static splitTrReg = /\n\]\[/g;
+    static tableReg = /(?<!\\):\[(.(?:(?<!(?<!\\):\[).|\n)*?)\]:/g;
+    static splitTrReg = /(?:\n\]\[|\]\n\[)/g;
     static splitTdReg = /\]\[/g;
     static tdReg = /^(?:([0-9]*)\[([0-9]*)\[)?((?:.|\n)+)$/g;
 
@@ -246,38 +243,42 @@ class Translator {
         }
     }
 
-    static toLists(content) {
+    static toBlocks(content) {
         while (true) {
             let uIndex = content.search(this.uListReg);
             let oIndex = content.search(this.oListReg);
+            let tIndex = content.search(this.tableReg);
 
-            // console.log(`u: ${uIndex} | o: ${oIndex}`);
-
-            if (uIndex === -1 && oIndex === -1) {
+            if (uIndex === -1 && oIndex === -1 && tIndex === -1) {
                 break;
-            } else if (oIndex === -1) {
+            }
+
+            uIndex = uIndex < 0 ? Infinity : uIndex;
+            oIndex = oIndex < 0 ? Infinity : oIndex;
+            tIndex = tIndex < 0 ? Infinity : tIndex;
+
+            const MIN_INDEX = Math.min(uIndex, oIndex, tIndex);
+
+            if (MIN_INDEX === uIndex) {
                 content = this.toUList(content);
-            } else if (uIndex === -1) {
+            } else if (MIN_INDEX === oIndex) {
                 content = this.toOList(content);
-            } else if (uIndex < oIndex) {
-                content = this.toUList(content);
-            } else if (oIndex < uIndex) {
-                content = this.toOList(content);
+            } else if (MIN_INDEX === tIndex) {
+                content = this.toTable(content);
             } else {
-                throw new Error('Something is wrong in list grammar!');
+                throw new Error('Something is wrong in block grammar!');
             }
         }
         return content;
     }
 
     static checkInside(mainReg, splitReg, content, translateFunction) {
-        return content.replace(mainReg, (_match, capture) => {
-            let liArr = capture.split(splitReg);
-            liArr = liArr.map((li) => {
-                li = li.replaceAll(this.splitBrReg, '\n');
-                return this.toLists(li);
+        return content.replaceAll(mainReg, (_match, capture) => {
+            let lineArr = capture.split(splitReg);
+            lineArr = lineArr.map((line) => {
+                return this.toBlocks(line);
             });
-            return translateFunction(liArr);
+            return translateFunction(lineArr);
         });
     }
 
@@ -316,58 +317,30 @@ class Translator {
         );
     }
 
-    static checkTableConflict(content) {
-        const ulCnt = (content.match(/<ul.*?>/g) || []).length;
-        const ulEndCnt = (content.match(/<\/ul>/g) || []).length;
-
-        const olCnt = (content.match(/<ol.*?>/g) || []).length;
-        const olEndCnt = (content.match(/<\/ol>/g) || []).length;
-
-        const liCnt = (content.match(/<li.*?>/g) || []).length;
-        const liEndCnt = (content.match(/<\/li>/g) || []).length;
-
-        const liEndLiCnt = (content.match(/<\/li><li.*?>/g) || []).length;
-
-        if (ulCnt !== ulEndCnt) return true;
-
-        if (olCnt !== olEndCnt) return true;
-
-        if (liCnt !== liEndCnt) return true;
-
-        if (liEndLiCnt !== 0 && ulCnt == 0 && olCnt == 0) return true;
-
-        return false;
-    }
-
     static toTable(content) {
-        return content;
-        return this.checkInsideLoop(this.tableReg, content, (capture) => {
-            let trList = capture.split(this.splitTrReg);
-            let tableHTML = '<table><tbody>';
-            for (let tr of trList) {
-                tableHTML = tableHTML.concat('<tr>');
-                let tdList = tr.split(this.splitTdReg);
-                for (let td of tdList) {
-                    if (this.checkTableConflict(td)) {
-                        // Grammar error!
-                        throw new Error('Table and list grammar conflicted!');
-                    } else {
-                        tableHTML = tableHTML.concat(
-                            td.replaceAll(
-                                this.tdReg,
-                                (_match, col, row, text) => {
-                                    col = !col ? 1 : col;
-                                    row = !row ? 1 : row;
-                                    return `<td colspan="${col}" rowspan="${row}">${text}</td>`;
-                                }
-                            )
-                        );
-                    }
-                }
+        return this.checkInside(
+            this.tableReg,
+            this.splitTrReg,
+            content,
+            (trArr) => {
+                let tableHTML = '<table><tbody><tr>';
+                trArr = trArr.map((tr) => {
+                    let tdArr = tr.split(this.splitTdReg);
+                    tdArr = tdArr.map((td) => {
+                        return td.replaceAll(this.tdReg, (_match, col, row, text) => {
+                            col = !col ? 1 : col;
+                            row = !row ? 1 : row;
+                            text = this.toBlocks(text);
+                            return `<td colspan="${col}" rowspan="${row}">${text}</td>`;
+                        });
+                    });
+                    return tdArr.join('');
+                });
+                tableHTML = tableHTML.concat(trArr.join('</tr><tr>'));
+                tableHTML = tableHTML.concat('</tr></tbody></table>');
+                return tableHTML;
             }
-            tableHTML = tableHTML.concat('</tbody></table>');
-            return tableHTML;
-        });
+        );
     }
 
     /*
@@ -481,11 +454,9 @@ class Translator {
         const anchorReg = /\\(\[\[(?:[^|]+?|.+?(?<!\\)\|.+?)]])/g;
         const noteReg = /\\(\(\((?:[^|]+?|.+?(?<!\\)\|.*?)\)\))/g;
         const titleReg = /(?<=\n)\\(#{1,5} .+)(?=\n)/g;
-        const uListReg = /(?:^|(?<=\n))\\(\) ?(?:.|\n(?=\)|=))+)/g;
-        const oListReg = /(?:^|(?<=\n))\\(\} ?(?:.|\n(?=\}|=))+)/g;
-
-        const tableReg =
-            /(?<=\n|<li.*?>|\)\(|}{|:\[|\]\[)\\(:\[.(?:(?<!:\[).(?!:\[)|\n)*?\]:)(?=\n|<\/li>|\]:)/g;
+        const uListReg = /\\(:\(.(?:(?<!(?<!\\):\().|\n)*?\):)/g;
+        const oListReg = /\\(:\{.(?:(?<!(?<!\\):\{).|\n)*?\}:)/g;
+        const tableReg = /\\(:\[.(?:(?<!(?<!\\):\[).|\n)*?\]:)/g;
 
         content = content.replaceAll(boldReg, '$1');
         content = content.replaceAll(italicReg, '$1');
@@ -530,8 +501,7 @@ class Translator {
             content = this.toAnchor(content);
             content = this.toNote(content);
             content = this.toTitle(content);
-            content = this.toLists(content);
-            content = this.toTable(content); // It should be done after above two types lists.
+            content = this.toBlocks(content);
 
             // content = this.toImage(content);
             // content = this.toIndent(content);

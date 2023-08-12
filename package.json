@@ -1,6 +1,6 @@
 {
   "name": "ken-markup",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Markup language for ken-zone",
   "main": "index.js",
   "type": "module",
