@@ -21,7 +21,8 @@
     //     }
     // }
 
-    let description = `\\ 문법 취소
+    let description = `[ver. 0.2.1]
+\\ 문법 취소
 **굵게**
 //기울임//
 ~~취소선~~

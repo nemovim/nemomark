@@ -63,7 +63,7 @@ ken-markup is a markup language made for family websites of ken-zone.
 
 * \# title
 
-    Title grammar has five levels which can be changed by a count of `#`.
+    Title grammar has five levels which can be changed by the count of `#`.
 
     ```
     ex)
