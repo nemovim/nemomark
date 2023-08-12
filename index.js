@@ -5,33 +5,17 @@ class Translator {
     static deleteReg = /(?<!\\)~~(?:((?:.|\n)+?))~~/g;
     static supReg = /(?<!\\)\^\^(?:((?:.|\n)+?))\^\^/g;
     static subReg = /(?<!\\),,(?:((?:.|\n)+?)),,/g;
-    static indentReg = /(?<!\\)::/g;
     static hrReg = /(?<=\n)(?<!\\)(----\n)/g;
     static anchorReg = /(?<!\\)\[\[(?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.+?)))]]/g;
     static noteReg = /(?<!\\)\(\((?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.*?)))\)\)/g;
     static titleReg = /(?<=\n)(?<!\\)(#{1,5}) (.+)(?=\n)/g;
 
-    /*
+    static splitBrReg = /\n= ?/g;
 
-    {={indent}}
-
-    ) aaa
-    ) bbb
-    =) ccc
-    =} ddd
-    == eee
-    =} fff
-    ) ggg
-    hhh
-
-    */
-
-    static uListReg =
-        /(?<=\n|\(|{|\|)(?<!\\)\(((?:.|\n)+?)\)(?=\n|\)|})/g;
-    static splitUListReg = /(?<=\n)\|(?=.)/g;
-    static oListReg =
-        /(?<=\n|<li.*?>|{|\|)(?<!\\){((?:.|\n)+?)}(?=\n|<\/li>|})/g;
-    static splitUListReg = /(?<=\n)\|(?=.)/g;
+    static uListReg = /(?:^|(?<=\n))(?<!\\)\) ?((?:.|\n(?=\)|=))+)/;
+    static splitUListReg = /\n\) ?/g;
+    static oListReg = /(?:^|(?<=\n))(?<!\\)\} ?((?:.|\n(?=\}|=))+)/;
+    static splitOListReg = /\n\} ?/g;
 
     static tableReg =
         /(?<=\n|<li.*?>|\)\(|}{|:\[|\]\[)(?<!\\):\[(.(?:(?<!:\[).(?!:\[)|\n)*?)\]:(?=\n|<\/li>|\]:)/g;
@@ -39,11 +23,17 @@ class Translator {
     static splitTdReg = /\]\[/g;
     static tdReg = /^(?:([0-9]*)\[([0-9]*)\[)?((?:.|\n)+)$/g;
 
-
     // static imageReg = /./g;
+
+    // {={indent}}
+    // static indentReg = /(?<!\\)::/g;
+
+    // {?{span}}
+    // static spanReg = /./g;
+
     // static codeReg = /./g;
     // static quoteReg = /./g;
-    // static spanReg = /./g;
+
     // static mathReg = /./g;
 
     static toBold(content) {
@@ -68,10 +58,6 @@ class Translator {
 
     static toSub(content) {
         return content.replaceAll(this.subReg, '<sub>$1</sub>');
-    }
-
-    static toIndent(content) {
-        return content.replaceAll(this.indentReg, '&nbsp;&nbsp;&nbsp;&nbsp;');
     }
 
     static toHr(content) {
@@ -260,24 +246,39 @@ class Translator {
         }
     }
 
-    static checkInsideLoop(reg, content, translateFunction) {
-        let parsedContent = content;
+    static toLists(content) {
         while (true) {
-            if (parsedContent.search(reg) !== -1) {
-                // There is something to change.
-                // Change them from inside.
-                parsedContent = parsedContent.replaceAll(
-                    reg,
-                    (_match, capture) => {
-                        return translateFunction(capture);
-                    }
-                );
-            } else {
-                // There are no more things to change.
+            let uIndex = content.search(this.uListReg);
+            let oIndex = content.search(this.oListReg);
+
+            // console.log(`u: ${uIndex} | o: ${oIndex}`);
+
+            if (uIndex === -1 && oIndex === -1) {
                 break;
+            } else if (oIndex === -1) {
+                content = this.toUList(content);
+            } else if (uIndex === -1) {
+                content = this.toOList(content);
+            } else if (uIndex < oIndex) {
+                content = this.toUList(content);
+            } else if (oIndex < uIndex) {
+                content = this.toOList(content);
+            } else {
+                throw new Error('Something is wrong in list grammar!');
             }
         }
-        return parsedContent;
+        return content;
+    }
+
+    static checkInside(mainReg, splitReg, content, translateFunction) {
+        return content.replace(mainReg, (_match, capture) => {
+            let liArr = capture.split(splitReg);
+            liArr = liArr.map((li) => {
+                li = li.replaceAll(this.splitBrReg, '\n');
+                return this.toLists(li);
+            });
+            return translateFunction(liArr);
+        });
     }
 
     /**
@@ -287,30 +288,32 @@ class Translator {
      * @returns A HTML content of the list.
      */
     static concatListItems(type, liList) {
-        let listHTML = `<${type}>`;
-        for (let item of liList) {
-            listHTML = listHTML.concat(`<li>${item}</li>`);
-        }
-        listHTML = listHTML.concat(`</${type}>`);
+        let listHTML = `<${type}><li>`;
+        listHTML = listHTML.concat(liList.join('</li><li>'));
+        listHTML = listHTML.concat(`</li></${type}>`);
         return listHTML;
     }
 
     static toUList(content) {
-        return this.checkInsideLoop(this.uListReg, content, (capture) => {
-            return this.concatListItems(
-                'ul',
-                capture.split(this.splitUListReg)
-            );
-        });
+        return this.checkInside(
+            this.uListReg,
+            this.splitUListReg,
+            content,
+            (liArr) => {
+                return this.concatListItems('ul', liArr);
+            }
+        );
     }
 
     static toOList(content) {
-        return this.checkInsideLoop(this.oListReg, content, (capture) => {
-            return this.concatListItems(
-                'ol',
-                capture.split(this.splitOListReg)
-            );
-        });
+        return this.checkInside(
+            this.oListReg,
+            this.splitOListReg,
+            content,
+            (liArr) => {
+                return this.concatListItems('ol', liArr);
+            }
+        );
     }
 
     static checkTableConflict(content) {
@@ -337,6 +340,7 @@ class Translator {
     }
 
     static toTable(content) {
+        return content;
         return this.checkInsideLoop(this.tableReg, content, (capture) => {
             let trList = capture.split(this.splitTrReg);
             let tableHTML = '<table><tbody>';
@@ -421,6 +425,10 @@ class Translator {
         });
     }
 
+    static toIndent(content) {
+        return content.replaceAll(this.indentReg, '&nbsp;&nbsp;&nbsp;&nbsp;');
+    }
+
     static toSpan() {
         return new Promise((resolve) => {
             let parsedContent = content.replaceAll(
@@ -469,15 +477,13 @@ class Translator {
         const deleteReg = /\\(~~(?:.|\n)+?~~)/g;
         const supReg = /\\(\^\^(?:.|\n)+?\^\^)/g;
         const subReg = /\\(,,(?:.|\n)+?,,)/g;
-        const indentReg = /\\(::)/g;
         const hrReg = /(?<=\n)\\(----)(?=\n)/g;
         const anchorReg = /\\(\[\[(?:[^|]+?|.+?(?<!\\)\|.+?)]])/g;
         const noteReg = /\\(\(\((?:[^|]+?|.+?(?<!\\)\|.*?)\)\))/g;
         const titleReg = /(?<=\n)\\(#{1,5} .+)(?=\n)/g;
-        const uListReg =
-            /(?<=\n|:\(|\)\(|:{|}{)\\(:\(.(?:(?<!:\().(?!:\()|\n)*?\):)(?=\n|\):|}:)/g;
-        const oListReg =
-            /(?<=\n|<li.*?>|\)\(|:{|}{)\\(:{.(?:(?<!:{).(?!:{)|\n)*?}:)(?=\n|<\/li>|}:)/g;
+        const uListReg = /(?:^|(?<=\n))\\(\) ?(?:.|\n(?=\)|=))+)/g;
+        const oListReg = /(?:^|(?<=\n))\\(\} ?(?:.|\n(?=\}|=))+)/g;
+
         const tableReg =
             /(?<=\n|<li.*?>|\)\(|}{|:\[|\]\[)\\(:\[.(?:(?<!:\[).(?!:\[)|\n)*?\]:)(?=\n|<\/li>|\]:)/g;
 
@@ -487,7 +493,6 @@ class Translator {
         content = content.replaceAll(deleteReg, '$1');
         content = content.replaceAll(supReg, '$1');
         content = content.replaceAll(subReg, '$1');
-        content = content.replaceAll(indentReg, '$1');
         content = content.replaceAll(hrReg, '$1');
         content = content.replaceAll(anchorReg, '$1');
         content = content.replaceAll(noteReg, '$1');
@@ -510,7 +515,6 @@ class Translator {
     }
 
     static translate(_content) {
-
         let content = _content;
 
         try {
@@ -522,16 +526,15 @@ class Translator {
             content = this.toUnder(content);
             content = this.toSup(content);
             content = this.toSub(content);
-            content = this.toIndent(content);
             content = this.toHr(content);
             content = this.toAnchor(content);
             content = this.toNote(content);
             content = this.toTitle(content);
-            content = this.toUList(content); // It should be done before oList.
-            content = this.toOList(content); // It should be done after uList.
+            content = this.toLists(content);
             content = this.toTable(content); // It should be done after above two types lists.
 
             // content = this.toImage(content);
+            // content = this.toIndent(content);
             // content = this.toCode(content);
             // content = this.toQuote(content);
 
