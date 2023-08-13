@@ -120,7 +120,7 @@ class Translator {
                     }
                     const indexCnt = indexMap.get(indexOrder) + 1;
                     indexMap.set(indexOrder, indexCnt);
-                    return `<sup><a href="#f-${indexOrder}-${indexCnt}" id="n-${indexOrder}.${indexCnt}">[${index}]</a></sup>`;
+                    return `<sup><a href="#f-${indexOrder}-${indexCnt}" id="n-${indexOrder}-${indexCnt}">[${index}]</a></sup>`;
                 }
             }
         );
@@ -131,7 +131,7 @@ class Translator {
     }
 
     static addFootnote(indexList, indexMap, noteList) {
-        let content = '<hr id="content-footnote"><div id="footnote">';
+        let content = '\n<hr id="content-footnote"><div id="footnote">';
         for (let i = 0; i < indexList.length; i++) {
             if (typeof indexList[i] === 'number') {
                 content = content.concat(

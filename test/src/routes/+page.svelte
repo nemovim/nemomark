@@ -21,7 +21,7 @@
     //     }
     // }
 
-    let description = `[ver. 1.0.0]
+    let description = `[ver. 1.0.1]
 \\ 문법 취소
 **굵게**
 //기울임//
@@ -61,11 +61,11 @@ __밑줄__
     <article>
         <p contenteditable="false" bind:innerText={errorMsg} id="errorP" />
     </article>
-    <article contenteditable="false" bind:innerHTML={translated} id="output" />
+    <article class="kmu" contenteditable="false" bind:innerHTML={translated} id="output" />
 </section>
 
 <style lang="scss">
-    @import './markup.scss';
+    @import './kmu.scss';
 
     section {
         display: flex;
