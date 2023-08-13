@@ -131,7 +131,7 @@ class Translator {
     }
 
     static addFootnote(indexList, indexMap, noteList) {
-        let content = '\n<hr id="content-footnote"><div id="footnote">';
+        let content = '<hr id="content-footnote"><div id="footnote">';
         for (let i = 0; i < indexList.length; i++) {
             if (typeof indexList[i] === 'number') {
                 content = content.concat(

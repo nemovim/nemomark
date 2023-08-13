@@ -21,7 +21,7 @@
     //     }
     // }
 
-    let description = `[ver. 1.0.1]
+    let description = `[ver. 1.0.2]
 \\ 문법 취소
 **굵게**
 //기울임//

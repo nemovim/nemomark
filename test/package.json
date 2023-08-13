@@ -21,6 +21,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"ken-markup": "^1.0.1"
+		"ken-markup": "^1.0.2"
 	}
 }
