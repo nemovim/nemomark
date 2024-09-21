@@ -1,23 +1,27 @@
 class Translator {
-    static boldReg = /(?<!\\)\*\*(?:((?:.|\n)+?))\*\*/g;
-    static italicReg = /(?<!\\)\/\/(?:((?:.|\n)+?))\/\//g;
-    static underReg = /(?<!\\)__(?:((?:.|\n)+?))__/g;
-    static deleteReg = /(?<!\\)~~(?:((?:.|\n)+?))~~/g;
-    static supReg = /(?<!\\)\^\^(?:((?:.|\n)+?))\^\^/g;
-    static subReg = /(?<!\\),,(?:((?:.|\n)+?)),,/g;
+    static boldReg = /(?<!\\)\*\*(?:((?:.|\n)+?))(?<!\\)\*\*/g;
+    static italicReg = /(?<!\\)\/\/(?:((?:.|\n)+?))(?<!\\)\/\//g;
+    static underReg = /(?<!\\)__(?:((?:.|\n)+?))(?<!\\)__/g;
+    static deleteReg = /(?<!\\)~~(?:((?:.|\n)+?))(?<!\\)~~/g;
+    static supReg = /(?<!\\)\^\^(?:((?:.|\n)+?))(?<!\\)\^\^/g;
+    static subReg = /(?<!\\),,(?:((?:.|\n)+?))(?<!\\),,/g;
     static hrReg = /(?<=\n)(?<!\\)(----\n)/g;
-    static anchorReg = /(?<!\\)\[\[(?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.+?)))]]/g;
-    static noteReg = /(?<!\\)\(\((?:(?:([^|]+?))|(?:(.+?)(?<!\\)\|(.*?)))\)\)/g;
-    static titleReg = /(?<=\n)(?<!\\)(#{1,5}) (.+)(?=\n)/g;
 
-    static uListReg = /(?<!\\):\((.(?:(?<!(?<!\\):\().|\n)*?)\):/g;
-    static splitUListReg = /(?:\n?\)\(|\)\n?\()/g;
-    static oListReg = /(?<!\\):\{(.(?:(?<!(?<!\\):\{).|\n)*?)\}:/g;
-    static splitOListReg = /(?:\n?\}\{|\}\n?\{)/g;
+    static anchorReg =
+        /(?<!\\)\[\[(?:(?:(.+?)(?<!\\)\|(.+?))|(?:(.+?)))(?<!\\)]]/g;
+    static noteReg =
+        /(?<!\\)\(\((?:(?:(.+?)(?<!\\)\|(.*?))|(?:(.+?)))(?<!\\)\)\)/g;
 
-    static tableReg = /(?<!\\):\[(.(?:(?<!(?<!\\):\[).|\n)*?)\]:/g;
-    static splitTrReg = /(?:\n\]\[|\]\n\[)/g;
-    static splitTdReg = /\]\[/g;
+    static titleReg = /(?<=\n)(?<!\\)(#{1,5})(.+)(?=\n)/g;
+
+    static uListReg = /(?<!\\):\((.(?:(?<!(?<!\\):\().|\n)*?)(?<!\\)\):/g;
+    static splitUListReg = /(?:\n?(?<!\\)\)\(|(?<!\\)\)\n?\()/g;
+    static oListReg = /(?<!\\):\{(.(?:(?<!(?<!\\):\{).|\n)*?)(?<!\\)\}:/g;
+    static splitOListReg = /(?:\n?(?<!\\)\}\{|(?<!\\)\}\n?\{)/g;
+
+    static tableReg = /(?<!\\):\[(.(?:(?<!(?<!\\):\[).|\n)*?)(?<!\\)\]:/g;
+    static splitTrReg = /(?:\n(?<!\\)\]\[|(?<!\\)\]\n\[)/g;
+    static splitTdReg = /(?<!\\)\]\[/g;
     static tdReg = /^(?:([0-9]*)\[([0-9]*)\[)?((?:.|\n)+)$/g;
 
     // static imageReg = /./g;
@@ -34,27 +38,45 @@ class Translator {
     // static mathReg = /./g;
 
     static toBold(content) {
-        return content.replaceAll(this.boldReg, '<strong>$1</strong>');
+        return content.replaceAll(
+            this.boldReg,
+            (_match, content) => `<strong>${content.trim()}</strong>`
+        );
     }
 
     static toItalic(content) {
-        return content.replaceAll(this.italicReg, '<em>$1</em>');
+        return content.replaceAll(
+            this.italicReg,
+            (_match, content) => `<em>${content.trim()}</em>`
+        );
     }
 
     static toUnder(content) {
-        return content.replaceAll(this.underReg, '<u>$1</u>');
+        return content.replaceAll(
+            this.underReg,
+            (_match, content) => `<u>${content.trim()}</u>`
+        );
     }
 
     static toDelete(content) {
-        return content.replaceAll(this.deleteReg, '<s>$1</s>');
+        return content.replaceAll(
+            this.deleteReg,
+            (_match, content) => `<s>${content.trim()}</s>`
+        );
     }
 
     static toSup(content) {
-        return content.replaceAll(this.supReg, '<sup>$1</sup>');
+        return content.replaceAll(
+            this.supReg,
+            (_match, content) => `<sup>${content.trim()}</sup>`
+        );
     }
 
     static toSub(content) {
-        return content.replaceAll(this.subReg, '<sub>$1</sub>');
+        return content.replaceAll(
+            this.subReg,
+            (_match, content) => `<sub>${content.trim()}</sub>`
+        );
     }
 
     static toHr(content) {
@@ -62,15 +84,20 @@ class Translator {
     }
 
     static toAnchor(content) {
+        const blockReg =
+            /(?<!\\)(\(\(|\)\)|:\(|\)\(|\):|:{|}{|}:|:\[|\]\[|\]:)/g;
         return content.replaceAll(
             this.anchorReg,
-            (_match, linkName, name, link) => {
+            (_match, link, name, linkName) => {
                 if (linkName !== undefined) {
                     //only link
+                    linkName = linkName.trim().replaceAll(blockReg, '\\$1');
                     let parsedLinkName = this.parseAnchorLink(linkName);
                     return `<a title="${parsedLinkName}" href="${parsedLinkName}">${linkName}</a>`;
                 } else {
-                    // name | link
+                    // link | name
+                    link = link.trim().replaceAll(blockReg, '\\$1');
+                    name = name.trim().replaceAll(blockReg, '\\$1');
                     link = this.parseAnchorLink(link);
                     return `<a title="${link}" href="${link}">${name}</a>`;
                 }
@@ -93,15 +120,17 @@ class Translator {
         let indexMap = new Map(); // { orderOfIndex1: cnt, orderOfIndex2: cnt, ...}
         let parsedContent = content.replaceAll(
             this.noteReg,
-            (_match, noteAndIndex, index, note) => {
+            (_match, index, note, noteAndIndex) => {
                 if (noteAndIndex !== undefined) {
                     // only note
-                    noteList.push(noteAndIndex);
+                    noteList.push(noteAndIndex.trim());
                     indexList.push(noteList.length);
                     const idx = noteList.length;
                     return `<sup><a href="#f-${idx}" id="n-${idx}">[${idx}]</a></sup>`;
                 } else {
                     // index and note
+                    index = index.trim();
+                    note = note.trim();
                     let indexOrder = indexList.indexOf(index) + 1; // Index of 'the index(name) of the footnote" of indexList.
                     if (indexOrder === 0) {
                         // new index
@@ -112,7 +141,7 @@ class Translator {
                             indexMap.set(indexOrder, 0);
                         } else {
                             throw new Error(
-                                'Name of custom anchor cannot be numbers!'
+                                'The name of custom anchor cannot be numbers!'
                             );
                         }
                     } else {
@@ -175,6 +204,7 @@ class Translator {
             this.titleReg,
             (_match, capture, content) => {
                 if (capture.length <= titleLevel + 1 && capture.length >= 1) {
+                    content = content.trim();
                     titleLevel = capture.length;
                     titleIndex = this.changeTitleIndex(titleIndex, titleLevel);
                     titleMap.set(titleIndex, content);
@@ -274,9 +304,9 @@ class Translator {
 
     static checkInside(mainReg, splitReg, content, translateFunction) {
         return content.replaceAll(mainReg, (_match, capture) => {
-            let lineArr = capture.split(splitReg);
+            let lineArr = capture.trim().split(splitReg);
             lineArr = lineArr.map((line) => {
-                return this.toBlocks(line);
+                return this.toBlocks(line.trim());
             });
             return translateFunction(lineArr);
         });
@@ -327,12 +357,15 @@ class Translator {
                 trArr = trArr.map((tr) => {
                     let tdArr = tr.split(this.splitTdReg);
                     tdArr = tdArr.map((td) => {
-                        return td.replaceAll(this.tdReg, (_match, col, row, text) => {
-                            col = !col ? 1 : col;
-                            row = !row ? 1 : row;
-                            text = this.toBlocks(text);
-                            return `<td colspan="${col}" rowspan="${row}">${text}</td>`;
-                        });
+                        return td.replaceAll(
+                            this.tdReg,
+                            (_match, col, row, text) => {
+                                col = !col ? 1 : col;
+                                row = !row ? 1 : row;
+                                text = this.toBlocks(text);
+                                return `<td colspan="${col}" rowspan="${row}">${text}</td>`;
+                            }
+                        );
                     });
                     return tdArr.join('');
                 });
@@ -444,20 +477,32 @@ class Translator {
 
     /** Remove \ before the grammars at the last */
     static toNormal(content) {
-        const boldReg = /\\(\*\*(?:.|\n)+?\*\*)/g;
-        const italicReg = /\\(\/\/(?:.|\n)+?\/\/)/g;
-        const underReg = /\\(__(?:.|\n)+?__)/g;
-        const deleteReg = /\\(~~(?:.|\n)+?~~)/g;
-        const supReg = /\\(\^\^(?:.|\n)+?\^\^)/g;
-        const subReg = /\\(,,(?:.|\n)+?,,)/g;
+        const verticalReg = /\\(\|)/g;
+        const boldReg = /\\(\*)/g;
+        const italicReg = /\\(\/)/g;
+        const underReg = /\\(_)/g;
+        const deleteReg = /\\(~)/g;
+        const supReg = /\\(\^)/g;
+        const subReg = /\\(,)/g;
+        // const boldReg = /\\(\*\*(?:.|\n)+?\*\*)/g;
+        // const italicReg = /\\(\/\/(?:.|\n)+?\/\/)/g;
+        // const underReg = /\\(__(?:.|\n)+?__)/g;
+        // const deleteReg = /\\(~~(?:.|\n)+?~~)/g;
+        // const supReg = /\\(\^\^(?:.|\n)+?\^\^)/g;
+        // const subReg = /\\(,,(?:.|\n)+?,,)/g;
         const hrReg = /(?<=\n)\\(----)(?=\n)/g;
-        const anchorReg = /\\(\[\[(?:[^|]+?|.+?(?<!\\)\|.+?)]])/g;
-        const noteReg = /\\(\(\((?:[^|]+?|.+?(?<!\\)\|.*?)\)\))/g;
-        const titleReg = /(?<=\n)\\(#{1,5} .+)(?=\n)/g;
-        const uListReg = /\\(:\(.(?:(?<!(?<!\\):\().|\n)*?\):)/g;
-        const oListReg = /\\(:\{.(?:(?<!(?<!\\):\{).|\n)*?\}:)/g;
-        const tableReg = /\\(:\[.(?:(?<!(?<!\\):\[).|\n)*?\]:)/g;
+        // const anchorReg = /\\(\[\[|\]\])/g;
+        // const noteReg = /\\(\(\(|\)\))/g;
+        // const anchorReg = /\\(\[\[(?:[^|\n]+?|.+?(?<!\\)\|.+?)]])/g;
+        // const noteReg = /\\(\(\((?:[^|\n]+?|.+?(?<!\\)\|.*?)\)\))/g;
+        const titleReg = /(?<=\n)\\(#{1,5}.+)(?=\n)/g;
+        // const uListReg = /\\(:\(.(?:(?<!(?<!\\):\().|\n)*?\):)/g;
+        // const oListReg = /\\(:\{.(?:(?<!(?<!\\):\{).|\n)*?\}:)/g;
+        // const tableReg = /\\(:\[.(?:(?<!(?<!\\):\[).|\n)*?\]:)/g;
+        const blockReg =
+            /\\(\[\[|\]\]|\(\(|\)\)|:\(|\)\n?\(|\):|:{|}\n?{|}:|:\[|\]\n?\[|\]:)/g;
 
+        content = content.replaceAll(verticalReg, '$1');
         content = content.replaceAll(boldReg, '$1');
         content = content.replaceAll(italicReg, '$1');
         content = content.replaceAll(underReg, '$1');
@@ -465,12 +510,13 @@ class Translator {
         content = content.replaceAll(supReg, '$1');
         content = content.replaceAll(subReg, '$1');
         content = content.replaceAll(hrReg, '$1');
-        content = content.replaceAll(anchorReg, '$1');
-        content = content.replaceAll(noteReg, '$1');
+        // content = content.replaceAll(anchorReg, '$1');
+        // content = content.replaceAll(noteReg, '$1');
         content = content.replaceAll(titleReg, '$1');
-        content = content.replaceAll(uListReg, '$1');
-        content = content.replaceAll(oListReg, '$1');
-        content = content.replaceAll(tableReg, '$1');
+        // content = content.replaceAll(uListReg, '$1');
+        // content = content.replaceAll(oListReg, '$1');
+        // content = content.replaceAll(tableReg, '$1');
+        content = content.replaceAll(blockReg, '$1');
 
         return content;
     }
@@ -498,7 +544,9 @@ class Translator {
             content = this.toSup(content);
             content = this.toSub(content);
             content = this.toHr(content);
-            content = this.toAnchor(content);
+
+            content = this.toAnchor(content); // This must be done before the notes and blocks.
+
             content = this.toNote(content);
             content = this.toTitle(content);
             content = this.toBlocks(content);

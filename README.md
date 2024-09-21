@@ -46,7 +46,7 @@ ken-markup is a markup language made for family websites of ken-zone.
     You can show different text to the text of the link by using `|`;
 
     ```
-    ex) [[name|link]]
+    ex) [[link|name]]
     -> name // The href will be the link
     ```
 
