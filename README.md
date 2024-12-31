@@ -127,7 +127,7 @@ Ken-Markup is a markup language made for family websites of ken-zone.
 
     Put a `\` character in front of the grammar that you want to ignore.
 
-    If you want to use **the same character** with the grammar at the front or end of the text, you must put `a space` between them to distinguish.
+    If you want to use **the same character** with the grammar at the front or end of the text, you must put **`a space`** between them to distinguish.
 
     ```
     ex) To make bold the text: "* is an asterisk"
@@ -135,11 +135,13 @@ Ken-Markup is a markup language made for family websites of ken-zone.
     ** * is an asterisk** // Correct
 
     ex) To make bold the text: "** is a bold grammar"
-    **** is a bold grammar** // Wrong
+    **** is a bold grammar** // Wrong (It would work, but not recommended.)
     ** ** is a bold grammar** // Wrong
-    **\** is a bold grammar** // Correct
+    **\** is a bold grammar** // Wrong (It would work, but not recommended.)
     ** \** is a bold grammar** // Correct
     ```
+
+    **ALWAYS** use space if it is confused
 
 ## Further plans
 
