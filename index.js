@@ -1,10 +1,10 @@
 class Translator {
-    static boldReg = /(?<!\\)\*\*(?:((?:.|\n)+?))(?<!\\)\*\*/g;
-    static italicReg = /(?<!\\)\/\/(?:((?:.|\n)+?))(?<!\\)\/\//g;
-    static underReg = /(?<!\\)__(?:((?:.|\n)+?))(?<!\\)__/g;
-    static deleteReg = /(?<!\\)~~(?:((?:.|\n)+?))(?<!\\)~~/g;
-    static supReg = /(?<!\\)\^\^(?:((?:.|\n)+?))(?<!\\)\^\^/g;
-    static subReg = /(?<!\\),,(?:((?:.|\n)+?))(?<!\\),,/g;
+    static boldReg = /(?<!\\)\*\*((?:.|\n)+?)(?<!\\)\*\*/g;
+    static italicReg = /(?<!\\)\/\/((?:.|\n)+?)(?<!\\)\/\//g;
+    static underReg = /(?<!\\)__((?:.|\n)+?)(?<!\\)__/g;
+    static deleteReg = /(?<!\\)~~((?:.|\n)+?)(?<!\\)~~/g;
+    static supReg = /(?<!\\)\^\^((?:.|\n)+?)(?<!\\)\^\^/g;
+    static subReg = /(?<!\\),,((?:.|\n)+?)(?<!\\),,/g;
     static hrReg = /(?<=\n)(?<!\\)(----\n)/g;
 
     static anchorReg =
@@ -467,6 +467,38 @@ class Translator {
 
     */
 
+    static toIgnore(content) {
+        // const verticalReg = /(\|)/g;
+        const boldReg = /(\*\*)/g;
+        const italicReg = /(\/\/)/g;
+        const underReg = /(__)/g;
+        const deleteReg = /(~~)/g;
+        const supReg = /(\^\^)/g;
+        const subReg = /(,,)/g;
+        const hrReg = /(?<=\n)(----)(?=\n)/g;
+        const titleReg = /(?<=\n)(#{1,5}.+)(?=\n)/g;
+        const anchorReg = /(\[\[|\]\])/g;
+        const noteReg = /(\(\(|\)\))/g;
+        const blockReg =
+            /(:\(|\)\n?\(|\):|:{|}\n?{|}:|:\[|\]\n?\[|\]:)/g;
+
+        // content = content.replaceAll(verticalReg, '\\$1');
+        content = content.replaceAll(boldReg, '\\$1');
+        content = content.replaceAll(italicReg, '\\$1');
+        content = content.replaceAll(underReg, '\\$1');
+        content = content.replaceAll(deleteReg, '\\$1');
+        content = content.replaceAll(supReg, '\\$1');
+        content = content.replaceAll(subReg, '\\$1');
+        content = content.replaceAll(hrReg, '\\$1');
+        content = content.replaceAll(anchorReg, '\\$1');
+        content = content.replaceAll(noteReg, '\\$1');
+        content = content.replaceAll(titleReg, '\\$1');
+        content = content.replaceAll(blockReg, '\\$1');
+
+        return content;
+
+    }
+
     static brListReg = /(<\/ul>|<\/ol>|<\/table>)\n/g;
 
     /** To clear HTML content by removing unnecessary white spaces. */
@@ -478,12 +510,12 @@ class Translator {
     /** Remove \ before the grammars at the last */
     static toNormal(content) {
         const verticalReg = /\\(\|)/g;
-        const boldReg = /\\(\*)/g;
-        const italicReg = /\\(\/)/g;
-        const underReg = /\\(_)/g;
-        const deleteReg = /\\(~)/g;
-        const supReg = /\\(\^)/g;
-        const subReg = /\\(,)/g;
+        const boldReg = /\\(\*\*)/g;
+        const italicReg = /\\(\/\/)/g;
+        const underReg = /\\(__)/g;
+        const deleteReg = /\\(~~)/g;
+        const supReg = /\\(\^\^)/g;
+        const subReg = /\\(,,)/g;
         // const boldReg = /\\(\*\*(?:.|\n)+?\*\*)/g;
         // const italicReg = /\\(\/\/(?:.|\n)+?\/\/)/g;
         // const underReg = /\\(__(?:.|\n)+?__)/g;
@@ -491,8 +523,8 @@ class Translator {
         // const supReg = /\\(\^\^(?:.|\n)+?\^\^)/g;
         // const subReg = /\\(,,(?:.|\n)+?,,)/g;
         const hrReg = /(?<=\n)\\(----)(?=\n)/g;
-        // const anchorReg = /\\(\[\[|\]\])/g;
-        // const noteReg = /\\(\(\(|\)\))/g;
+        const anchorReg = /\\(\[\[|\]\])/g;
+        const noteReg = /\\(\(\(|\)\))/g;
         // const anchorReg = /\\(\[\[(?:[^|\n]+?|.+?(?<!\\)\|.+?)]])/g;
         // const noteReg = /\\(\(\((?:[^|\n]+?|.+?(?<!\\)\|.*?)\)\))/g;
         const titleReg = /(?<=\n)\\(#{1,5}.+)(?=\n)/g;
@@ -500,7 +532,7 @@ class Translator {
         // const oListReg = /\\(:\{.(?:(?<!(?<!\\):\{).|\n)*?\}:)/g;
         // const tableReg = /\\(:\[.(?:(?<!(?<!\\):\[).|\n)*?\]:)/g;
         const blockReg =
-            /\\(\[\[|\]\]|\(\(|\)\)|:\(|\)\n?\(|\):|:{|}\n?{|}:|:\[|\]\n?\[|\]:)/g;
+            /\\(:\(|\)\n?\(|\):|:{|}\n?{|}:|:\[|\]\n?\[|\]:)/g;
 
         content = content.replaceAll(verticalReg, '$1');
         content = content.replaceAll(boldReg, '$1');
@@ -510,8 +542,8 @@ class Translator {
         content = content.replaceAll(supReg, '$1');
         content = content.replaceAll(subReg, '$1');
         content = content.replaceAll(hrReg, '$1');
-        // content = content.replaceAll(anchorReg, '$1');
-        // content = content.replaceAll(noteReg, '$1');
+        content = content.replaceAll(anchorReg, '$1');
+        content = content.replaceAll(noteReg, '$1');
         content = content.replaceAll(titleReg, '$1');
         // content = content.replaceAll(uListReg, '$1');
         // content = content.replaceAll(oListReg, '$1');

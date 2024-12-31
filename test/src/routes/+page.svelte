@@ -9,7 +9,7 @@
         try {
             translated = Translator.translate(content);
             errorMsg = '문법 오류 발생 시 여기에 표시됩니다.';
-        } catch(e) {
+        } catch (e) {
             errorMsg = e;
         }
     }
@@ -21,7 +21,7 @@
     //     }
     // }
 
-    let description = `[ver. 1.0.2]
+    let description = `[ver. 1.0.4]
 \\ 문법 취소
 **굵게**
 //기울임//
@@ -48,20 +48,25 @@ __밑줄__
 
 <section>
     <article id="input">
-        <pre contenteditable="false" bind:innerText={description} />
+        <pre contenteditable="false" bind:innerText={description}></pre>
 
         <textarea
             placeholder="내용을 입력하세요"
             name="content"
             bind:value={content}
             on:keyup={translate}
-        />
+        ></textarea>
     </article>
 
     <article>
-        <p contenteditable="false" bind:innerText={errorMsg} id="errorP" />
+        <p contenteditable="false" bind:innerText={errorMsg} id="errorP"></p>
     </article>
-    <article class="kmu" contenteditable="false" bind:innerHTML={translated} id="output" />
+    <article
+        class="kmu"
+        contenteditable="false"
+        bind:innerHTML={translated}
+        id="output"
+    ></article>
 </section>
 
 <style lang="scss">

@@ -1,6 +1,6 @@
 # ken-markup
 
-ken-markup is a markup language made for family websites of ken-zone.
+Ken-Markup is a markup language made for family websites of ken-zone.
 
 [Here](https://ken-markup.vercel.app) is a demo website of ken-markup (in Korean).
 
@@ -41,6 +41,7 @@ ken-markup is a markup language made for family websites of ken-zone.
 * \_\_under__
 * ^^sup^^
 * ,,sub,,
+
 * \[\[link]]
 
     You can show different text to the text of the link by using `|`;
@@ -124,7 +125,21 @@ ken-markup is a markup language made for family websites of ken-zone.
 
 * \ ignoring grammar
 
-    Put the `\` character in front of the grammar that you want to ignore.
+    Put a `\` character in front of the grammar that you want to ignore.
+
+    If you want to use **the same character** with the grammar at the front or end of the text, you must put `a space` between them to distinguish.
+
+    ```
+    ex) To make bold the text: "* is an asterisk"
+    *** is an asterisk** // Wrong
+    ** * is an asterisk** // Correct
+
+    ex) To make bold the text: "** is a bold grammar"
+    **** is a bold grammar** // Wrong
+    ** ** is a bold grammar** // Wrong
+    **\** is a bold grammar** // Correct
+    ** \** is a bold grammar** // Correct
+    ```
 
 ## Further plans
 
