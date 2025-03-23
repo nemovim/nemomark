@@ -36,7 +36,7 @@ Ken-Markup is a markup language made for family websites of ken-zone.
 ## Grammar
 
 * \*\*bold**
-* \//italic//
+* //italic//
 * \~~delete~~
 * \_\_under__
 * ^^sup^^
@@ -55,10 +55,11 @@ Ken-Markup is a markup language made for family websites of ken-zone.
 
 * \(\(note))
 
-    You can set the index of notes as texts by using `|`.
+    You can set the index of notes as text by using `|`.
+    Footnote will be added at the end of the content.
 
     ```
-    ex) ((index|note))
+    ex) ((note|index))
     -> [index] // The content will be the note
     ```
 
@@ -74,7 +75,7 @@ Ken-Markup is a markup language made for family websites of ken-zone.
     # title 2.
     ```
 
-* :[table]:
+* :\[table]:
 
     Table grammar starts with `:[` and ends with `]:`.
 
@@ -123,25 +124,37 @@ Ken-Markup is a markup language made for family websites of ken-zone.
     ```
     *There should be a line break (\n) before this grammar.*
 
-* \ ignoring grammar
+* \ escape character
 
-    Put a `\` character in front of the grammar that you want to ignore.
+    Put a `\` character in front of the character that you want to escape.
 
-    If you want to use **the same character** with the grammar at the front or end of the text, you must put **`a space`** between them to distinguish.
+    1. If you want to ignore the grammar,
+    1. OR you want to write grammar-like content in the grammar,
+
+    Escape one of the characters which comprise the grammar.
 
     ```
     ex) To make bold the text: "* is an asterisk"
     *** is an asterisk** // Wrong
-    ** * is an asterisk** // Correct
+    ** * is an asterisk ** // Wrong (It would work, but not recommended.)
+    **\* is an asterisk** // Correct
 
-    ex) To make bold the text: "** is a bold grammar"
-    **** is a bold grammar** // Wrong (It would work, but not recommended.)
-    ** ** is a bold grammar** // Wrong
-    **\** is a bold grammar** // Wrong (It would work, but not recommended.)
-    ** \** is a bold grammar** // Correct
+    ex) To show the content as it is: "**a** makes bold the letter a."
+    \**a** makes bold the letter a. // Correct
+    \*\*a** makes bold the letter a. // Correct
+    **a\** makes bold the letter a. // Correct
     ```
 
-    **ALWAYS** use space if it is confused.
+    No matter what you escape, just make the grammar **UNCOMPLITED**.
+
+* {{Ignoring}}
+
+    Similar to the escape character, it ignores(=escape) all grammars(=characters) in this grammar.
+
+    ```
+    ex) {{Ignore this link grammar: [[link]].}}
+    // The link grammar won't be applied.
+    // Of course, the parentheses will be removed.
 
 ## Further plans
 

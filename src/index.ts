@@ -516,7 +516,7 @@ class Translator {
         return content;
     }
 
-    static translate(content: string, allowHtml?: boolean): string {
+    static translate(content: string, allowHtml?: boolean, customGrammarFunc?: (arg1: string)=>string): string {
         try {
             if (!allowHtml) {
                 content = content.replaceAll(/</g, '&lt;').replaceAll(/>/g, '&gt;');
@@ -526,6 +526,9 @@ class Translator {
 
             content = this.toIgnore(content);
 
+            if (customGrammarFunc) {
+                content = customGrammarFunc(content);
+            }
 
             content = this.toBold(content);
             content = this.toItalic(content);
