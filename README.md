@@ -51,7 +51,7 @@ Ken-Markup is a markup language made for family websites of ken-zone.
     -> name // The href will be the link
     ```
 
-    *If you want to add some rules to the link text, you can override the `parseAnchorLink` method of the class.*
+    *If you want to add some rules to the link text, you can override the `parseAnchorAttributes` method of the class.*
 
 * \(\(note))
 
@@ -141,7 +141,7 @@ Ken-Markup is a markup language made for family websites of ken-zone.
     ** \** is a bold grammar** // Correct
     ```
 
-    **ALWAYS** use space if it is confused
+    **ALWAYS** use space if it is confused.
 
 ## Further plans
 

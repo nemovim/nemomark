@@ -1,27 +1,30 @@
 class Translator {
-    static boldReg = /(?<!\\)\*\*((?:.|\n)+?)(?<!\\)\*\*/g;
-    static italicReg = /(?<!\\)\/\/((?:.|\n)+?)(?<!\\)\/\//g;
-    static underReg = /(?<!\\)__((?:.|\n)+?)(?<!\\)__/g;
-    static deleteReg = /(?<!\\)~~((?:.|\n)+?)(?<!\\)~~/g;
-    static supReg = /(?<!\\)\^\^((?:.|\n)+?)(?<!\\)\^\^/g;
-    static subReg = /(?<!\\),,((?:.|\n)+?)(?<!\\),,/g;
-    static hrReg = /(?<=\n)(?<!\\)(----\n)/g;
+    static escapeReg = /(?:(?<!\\)(?:\\\\)*)/;
+    static ignoreReg = this.createRegExp(/\{\{(?!\{)/, /((?:.|\n)+?)/, /\}\}/);
 
-    static anchorReg =
-        /(?<!\\)\[\[(?:(?:(.+?)(?<!\\)\|(.+?))|(?:(.+?)))(?<!\\)]]/g;
-    static noteReg =
-        /(?<!\\)\(\((?:(?:(.+?)(?<!\\)\|(.*?))|(?:(.+?)))(?<!\\)\)\)/g;
+    static boldReg = this.createRegExp(/\*\*(?!\*)/, /((?:.|\n)+?)/, /\*\*/);
+    static italicReg = this.createRegExp(/\/\/(?!\/)/, /((?:.|\n)+?)/, /\/\//);
+    static underReg = this.createRegExp(/__(?!_)/, /((?:.|\n)+?)/, /__/);
+    static deleteReg = this.createRegExp(/~~(?!~)/, /((?:.|\n)+?)/, /~~/);
+    static supReg = this.createRegExp(/\^\^(?!\^)/, /((?:.|\n)+?)/, /\^\^/);
+    static subReg = this.createRegExp(/,,(?!,)/, /((?:.|\n)+?)/, /,,/);
 
-    static titleReg = /(?<=\n)(?<!\\)(#{1,5})(.+)(?=\n)/g;
+    static hrReg = this.combineRegExps(/(?<=\n)/, this.createRegExp(/(----\n)/));
 
-    static uListReg = /(?<!\\):\((.(?:(?<!(?<!\\):\().|\n)*?)(?<!\\)\):/g;
-    static splitUListReg = /(?:\n?(?<!\\)\)\(|(?<!\\)\)\n?\()/g;
-    static oListReg = /(?<!\\):\{(.(?:(?<!(?<!\\):\{).|\n)*?)(?<!\\)\}:/g;
-    static splitOListReg = /(?:\n?(?<!\\)\}\{|(?<!\\)\}\n?\{)/g;
+    static anchorReg = this.createRegExp(/\[\[(?!\[)/, /(.+?)/, /\]\]/);
+    static noteReg = this.createRegExp(/\(\((?!\()/, /(.+?)/, /\)\)/);
+    static splitReg = this.createRegExp(/\|/);
 
-    static tableReg = /(?<!\\):\[(.(?:(?<!(?<!\\):\[).|\n)*?)(?<!\\)\]:/g;
-    static splitTrReg = /(?:\n(?<!\\)\]\[|(?<!\\)\]\n\[)/g;
-    static splitTdReg = /(?<!\\)\]\[/g;
+    static titleReg = this.combineRegExps(/(?<=\n)/, this.escapeReg, /(#{1,5})(.+)(?=\n)/);
+
+    static uListReg = this.createRegExp(/:\(/, new RegExp(`(.(?:(?<!${this.escapeReg.source}:\\().|\n)*?)`), /\):/);
+    static splitUListReg = new RegExp(`\n?${this.escapeReg.source}\\)\\(|${this.escapeReg.source}\\)\n?\\(`, 'g');
+    static oListReg = this.createRegExp(/:{/, new RegExp(`(.(?:(?<!${this.escapeReg.source}:{).|\n)*?)`), /}:/);
+    static splitOListReg = new RegExp(`\n?${this.escapeReg.source}}{|${this.escapeReg.source}}\n?{`, 'g');
+
+    static tableReg = this.createRegExp(/:\[/, new RegExp(`(.(?:(?<!${this.escapeReg.source}:\\[).|\n)*?)`), /\]:/);
+    static splitTrReg = new RegExp(`\n${this.escapeReg.source}\\]\\[|${this.escapeReg.source}\\]\n\\[`, 'g');
+    static splitTdReg = this.createRegExp(/\]\[/);
     static tdReg = /^(?:([0-9]*)\[([0-9]*)\[)?((?:.|\n)+)$/g;
 
     // static imageReg = /./g;
@@ -37,139 +40,135 @@ class Translator {
 
     // static mathReg = /./g;
 
-    static toBold(content) {
+    static combineRegExps(...regArr: RegExp[]): RegExp {
+        return new RegExp(regArr.map(reg => reg.source).join(''), 'g');
+    }
+
+    static createRegExp(openReg: RegExp, captureReg?: RegExp, closeReg?: RegExp): RegExp {
+        if (captureReg && closeReg) {
+            return this.combineRegExps(this.escapeReg, openReg, captureReg, this.escapeReg, closeReg);
+            // } else if (captureReg && !closeReg) {
+            //     return new RegExp(this.escapeReg.source + openReg, 'g')
+        } else {
+            return this.combineRegExps(this.escapeReg, openReg);
+        }
+    }
+
+    static toBold(content: string): string {
         return content.replaceAll(
             this.boldReg,
             (_match, content) => `<strong>${content.trim()}</strong>`
         );
     }
 
-    static toItalic(content) {
+    static toItalic(content: string): string {
         return content.replaceAll(
             this.italicReg,
             (_match, content) => `<em>${content.trim()}</em>`
         );
     }
 
-    static toUnder(content) {
+    static toUnder(content: string): string {
         return content.replaceAll(
             this.underReg,
             (_match, content) => `<u>${content.trim()}</u>`
         );
     }
 
-    static toDelete(content) {
+    static toDelete(content: string): string {
         return content.replaceAll(
             this.deleteReg,
             (_match, content) => `<s>${content.trim()}</s>`
         );
     }
 
-    static toSup(content) {
+    static toSup(content: string): string {
         return content.replaceAll(
             this.supReg,
             (_match, content) => `<sup>${content.trim()}</sup>`
         );
     }
 
-    static toSub(content) {
+    static toSub(content: string): string {
         return content.replaceAll(
             this.subReg,
             (_match, content) => `<sub>${content.trim()}</sub>`
         );
     }
 
-    static toHr(content) {
+    static toHr(content: string): string {
         return content.replaceAll(this.hrReg, '<hr>');
     }
 
-    static toAnchor(content) {
-        const blockReg =
-            /(?<!\\)(\(\(|\)\)|:\(|\)\(|\):|:{|}{|}:|:\[|\]\[|\]:)/g;
+    static toAnchor(content: string): string {
         return content.replaceAll(
             this.anchorReg,
-            (_match, link, name, linkName) => {
-                if (linkName !== undefined) {
-                    //only link
-                    linkName = linkName.trim().replaceAll(blockReg, '\\$1');
-                    let parsedLinkName = this.parseAnchorLink(linkName);
-                    return `<a title="${parsedLinkName}" href="${parsedLinkName}">${linkName}</a>`;
-                } else {
-                    // link | name
-                    link = link.trim().replaceAll(blockReg, '\\$1');
-                    name = name.trim().replaceAll(blockReg, '\\$1');
-                    link = this.parseAnchorLink(link);
-                    return `<a title="${link}" href="${link}">${name}</a>`;
-                }
+            (_match, captured) => {
+                let [parsedTitle, parsedLink, parsedName] = this.parseAnchorAttributes(captured.split(this.splitReg)[0].trim(), captured.split(this.splitReg).slice(1).join('|').trim());
+
+                return `<a title="${parsedTitle}" href="${parsedLink}">${parsedName}</a>`;
             }
         );
     }
 
-    /**
-     * Please override this method to parse the link as you want.
-     * @param {string} link - original link
-     * @returns {string} parsed link
-     */
-    static parseAnchorLink(link) {
-        return link;
+    /**  Please override this method to parse the anchor as you want.
+    * Returned Array will be used like this: `<a title="${returns[0]}" href="${returns[1]}">${returns[2]}</a>`; */
+    static parseAnchorAttributes(link: string, name?: string): [string, string, string] {
+        if (!name) name = link;
+        return [link, link, name];
     }
 
-    static toNote(content) {
-        let noteList = []; // [note1, note2, ...]
-        let indexList = []; // [1, 2, text, 4, 5, ...]
-        let indexMap = new Map(); // { orderOfIndex1: cnt, orderOfIndex2: cnt, ...}
+    static toNote(content: string): string {
+        const noteList: string[] = []; // [note1, note2, ...]
+        const indexList: string[] = []; // [1, 2, text, 4, 5, ...]
+        const indexCntMap = new Map<number, number>(); // { orderOfIndex1: cnt, orderOfIndex2: cnt, ...}
         let parsedContent = content.replaceAll(
             this.noteReg,
-            (_match, index, note, noteAndIndex) => {
-                if (noteAndIndex !== undefined) {
+            (_match, captured) => {
+                const note = captured.split(this.splitReg)[0].trim()
+                const index = captured.split(this.splitReg).slice(1).join('|').trim()
+                if (index === '') {
                     // only note
-                    noteList.push(noteAndIndex.trim());
-                    indexList.push(noteList.length);
+                    noteList.push(note);
                     const idx = noteList.length;
-                    return `<sup><a href="#f-${idx}" id="n-${idx}">[${idx}]</a></sup>`;
+                    indexList.push(String(idx));
+                    return `<sup><a id="n-${idx}" href="#f-${idx}">[${idx}]</a></sup>`;
                 } else {
                     // index and note
-                    index = index.trim();
-                    note = note.trim();
-                    let indexOrder = indexList.indexOf(index) + 1; // Index of 'the index(name) of the footnote" of indexList.
+                    let indexOrder = indexList.indexOf(index) + 1; // Index of "the index(name) of the footnote" of indexList.
                     if (indexOrder === 0) {
                         // new index
-                        if (isNaN(parseInt(index))) {
-                            indexList.push(index);
-                            noteList.push(note);
-                            indexOrder = indexList.length;
-                            indexMap.set(indexOrder, 0);
-                        } else {
-                            throw new Error(
-                                'The name of custom anchor cannot be numbers!'
-                            );
-                        }
-                    } else {
-                        // not new index
+                        if (!isNaN(parseInt(index)))
+                            throw new Error('The name of custom anchor cannot be numbers!');
+
+                        indexList.push(index);
+                        noteList.push(note);
+                        indexOrder = indexList.length;
+                        indexCntMap.set(indexOrder, 0);
                     }
-                    const indexCnt = indexMap.get(indexOrder) + 1;
-                    indexMap.set(indexOrder, indexCnt);
-                    return `<sup><a href="#f-${indexOrder}-${indexCnt}" id="n-${indexOrder}-${indexCnt}">[${index}]</a></sup>`;
+                    const indexCnt = indexCntMap.get(indexOrder) as number + 1;
+                    indexCntMap.set(indexOrder, indexCnt);
+                    return `<sup><a id="n-${indexOrder}-${indexCnt}" href="#f-${indexOrder}-${indexCnt}">[${index}]</a></sup>`;
                 }
             }
         );
         parsedContent = parsedContent.concat(
-            this.addFootnote(indexList, indexMap, noteList)
+            this.addFootnote(indexList, indexCntMap, noteList)
         );
         return parsedContent;
     }
 
-    static addFootnote(indexList, indexMap, noteList) {
+    static addFootnote(indexList: string[], indexCntMap: Map<number, number>, noteList: string[]): string {
         let content = '<hr id="content-footnote"><div id="footnote">';
         for (let i = 0; i < indexList.length; i++) {
-            if (typeof indexList[i] === 'number') {
+            if (!isNaN(parseInt(indexList[i]))) {
                 content = content.concat(
                     `<p><a id="f-${indexList[i]}" href="#n-${indexList[i]}">[${indexList[i]}]</a> ${noteList[i]}</p>`
                 );
             } else {
                 const footAnchor = this.makeFootAnchor(
                     i + 1,
-                    indexMap.get(i + 1)
+                    indexCntMap.get(i + 1) as number
                 );
                 content = content.concat(
                     `<p>[${indexList[i]}]<sup>${footAnchor}</sup> ${noteList[i]}</p>`
@@ -186,7 +185,7 @@ class Translator {
      * @param {number} indexCnt - The total count of the same indexes
      * @returns {string} HTML elements of the footnote
      */
-    static makeFootAnchor(indexOrder, indexCnt) {
+    static makeFootAnchor(indexOrder: number, indexCnt: number): string {
         let footAnchor = '';
         for (let i = 1; i <= indexCnt; i++) {
             footAnchor = footAnchor.concat(
@@ -196,9 +195,9 @@ class Translator {
         return footAnchor;
     }
 
-    static toTitle(content) {
+    static toTitle(content: string): string {
         let titleLevel = 0; // 1 ~ 5
-        let titleMap = new Map(); // { titleIndex: title } | ex) {10000: 'a', 11000: 'b', ... }
+        let titleMap = new Map<number, string>(); // { titleIndex: title } | ex) {10000: 'a', 11000: 'b', ... }
         let titleIndex = 0;
         let parsedContent = content.replaceAll(
             this.titleReg,
@@ -220,16 +219,15 @@ class Translator {
         return parsedContent;
     }
 
-    static changeTitleIndex(index, level) {
+    static changeTitleIndex(index: number, level: number): number {
         const weight = 10 ** (5 - level);
         return (Math.floor(index / weight) + 1) * weight;
     }
 
-    static makeTitle(index, level, content) {
+    static makeTitle(index: number, level: number, content: string): string {
         const idx = this.convertIndex(index);
-        return `<h${level + 1} id="p-${idx.type2}"><a href="#index">${
-            idx.type1
-        }</a> ${content}</h${level + 1}>`;
+        return `<h${level + 1} id="p-${idx.type2}"><a href="#index">${idx.type1
+            }</a> ${content}</h${level + 1}>`;
     }
 
     /**
@@ -237,7 +235,7 @@ class Translator {
      * @param {number} index - index number | ex) 12300
      * @returns {{type1: string, type2: string, level: number}} ex) type1: 1.2.3. | type2: 1-2-3
      */
-    static convertIndex(index) {
+    static convertIndex(index: number): { type1: string, type2: string, level: number } {
         let level = 0;
         const indexArray = [];
         let indexOfLevel;
@@ -257,7 +255,7 @@ class Translator {
         };
     }
 
-    static addTitleIndex(titleMap) {
+    static addTitleIndex(titleMap: Map<number, string>): string {
         if (titleMap.size === 0) {
             // If there isn't any title
             return '<div id="index" style="display: none;"></div>';
@@ -273,7 +271,7 @@ class Translator {
         }
     }
 
-    static toBlocks(content) {
+    static toBlocks(content: string): string {
         while (true) {
             let uIndex = content.search(this.uListReg);
             let oIndex = content.search(this.oListReg);
@@ -302,9 +300,9 @@ class Translator {
         return content;
     }
 
-    static checkInside(mainReg, splitReg, content, translateFunction) {
+    static checkInside(mainReg: RegExp, splitReg: RegExp, content: string, translateFunction: (arr: string[]) => string) {
         return content.replaceAll(mainReg, (_match, capture) => {
-            let lineArr = capture.trim().split(splitReg);
+            let lineArr: string[] = capture.trim().split(splitReg);
             lineArr = lineArr.map((line) => {
                 return this.toBlocks(line.trim());
             });
@@ -318,14 +316,14 @@ class Translator {
      * @param {Array} liList - The list of items
      * @returns A HTML content of the list.
      */
-    static concatListItems(type, liList) {
+    static concatListItems(type: string, liList: string[]): string {
         let listHTML = `<${type}><li>`;
         listHTML = listHTML.concat(liList.join('</li><li>'));
         listHTML = listHTML.concat(`</li></${type}>`);
         return listHTML;
     }
 
-    static toUList(content) {
+    static toUList(content: string): string {
         return this.checkInside(
             this.uListReg,
             this.splitUListReg,
@@ -336,7 +334,7 @@ class Translator {
         );
     }
 
-    static toOList(content) {
+    static toOList(content: string): string {
         return this.checkInside(
             this.oListReg,
             this.splitOListReg,
@@ -347,7 +345,7 @@ class Translator {
         );
     }
 
-    static toTable(content) {
+    static toTable(content: string): string {
         return this.checkInside(
             this.tableReg,
             this.splitTrReg,
@@ -431,7 +429,7 @@ class Translator {
         });
     }
 
-    static toIndent(content) {
+    static toIndent(content: string): string {
         return content.replaceAll(this.indentReg, '&nbsp;&nbsp;&nbsp;&nbsp;');
     }
 
@@ -467,107 +465,67 @@ class Translator {
 
     */
 
-    static toIgnore(content) {
-        // const verticalReg = /(\|)/g;
-        const boldReg = /(\*\*)/g;
-        const italicReg = /(\/\/)/g;
-        const underReg = /(__)/g;
-        const deleteReg = /(~~)/g;
-        const supReg = /(\^\^)/g;
-        const subReg = /(,,)/g;
-        const hrReg = /(?<=\n)(----)(?=\n)/g;
-        const titleReg = /(?<=\n)(#{1,5}.+)(?=\n)/g;
-        const anchorReg = /(\[\[|\]\])/g;
-        const noteReg = /(\(\(|\)\))/g;
-        const blockReg =
-            /(:\(|\)\n?\(|\):|:{|}\n?{|}:|:\[|\]\n?\[|\]:)/g;
+    static toIgnore(content: string): string {
+        return content.replaceAll(
+            this.ignoreReg,
+            (_match, captured) => {
+                return `{{${this.toEscape(captured)}}}`;
+            }
+        );
+    }
 
-        // content = content.replaceAll(verticalReg, '\\$1');
-        content = content.replaceAll(boldReg, '\\$1');
-        content = content.replaceAll(italicReg, '\\$1');
-        content = content.replaceAll(underReg, '\\$1');
-        content = content.replaceAll(deleteReg, '\\$1');
-        content = content.replaceAll(supReg, '\\$1');
-        content = content.replaceAll(subReg, '\\$1');
-        content = content.replaceAll(hrReg, '\\$1');
-        content = content.replaceAll(anchorReg, '\\$1');
-        content = content.replaceAll(noteReg, '\\$1');
-        content = content.replaceAll(titleReg, '\\$1');
-        content = content.replaceAll(blockReg, '\\$1');
-
-        return content;
-
+    static toNormal(content: string): string {
+        return content.replaceAll(
+            this.ignoreReg,
+            (_match, captured) => {
+                return this.toUnescape(captured);
+            }
+        );
     }
 
     static brListReg = /(<\/ul>|<\/ol>|<\/table>)\n/g;
 
     /** To clear HTML content by removing unnecessary white spaces. */
-    static toClear(content) {
+    static toClear(content: string): string {
         content = content.replaceAll(this.brListReg, '$1');
         return content;
     }
 
-    /** Remove \ before the grammars at the last */
-    static toNormal(content) {
-        const verticalReg = /\\(\|)/g;
-        const boldReg = /\\(\*\*)/g;
-        const italicReg = /\\(\/\/)/g;
-        const underReg = /\\(__)/g;
-        const deleteReg = /\\(~~)/g;
-        const supReg = /\\(\^\^)/g;
-        const subReg = /\\(,,)/g;
-        // const boldReg = /\\(\*\*(?:.|\n)+?\*\*)/g;
-        // const italicReg = /\\(\/\/(?:.|\n)+?\/\/)/g;
-        // const underReg = /\\(__(?:.|\n)+?__)/g;
-        // const deleteReg = /\\(~~(?:.|\n)+?~~)/g;
-        // const supReg = /\\(\^\^(?:.|\n)+?\^\^)/g;
-        // const subReg = /\\(,,(?:.|\n)+?,,)/g;
-        const hrReg = /(?<=\n)\\(----)(?=\n)/g;
-        const anchorReg = /\\(\[\[|\]\])/g;
-        const noteReg = /\\(\(\(|\)\))/g;
-        // const anchorReg = /\\(\[\[(?:[^|\n]+?|.+?(?<!\\)\|.+?)]])/g;
-        // const noteReg = /\\(\(\((?:[^|\n]+?|.+?(?<!\\)\|.*?)\)\))/g;
-        const titleReg = /(?<=\n)\\(#{1,5}.+)(?=\n)/g;
-        // const uListReg = /\\(:\(.(?:(?<!(?<!\\):\().|\n)*?\):)/g;
-        // const oListReg = /\\(:\{.(?:(?<!(?<!\\):\{).|\n)*?\}:)/g;
-        // const tableReg = /\\(:\[.(?:(?<!(?<!\\):\[).|\n)*?\]:)/g;
-        const blockReg =
-            /\\(:\(|\)\n?\(|\):|:{|}\n?{|}:|:\[|\]\n?\[|\]:)/g;
-
-        content = content.replaceAll(verticalReg, '$1');
-        content = content.replaceAll(boldReg, '$1');
-        content = content.replaceAll(italicReg, '$1');
-        content = content.replaceAll(underReg, '$1');
-        content = content.replaceAll(deleteReg, '$1');
-        content = content.replaceAll(supReg, '$1');
-        content = content.replaceAll(subReg, '$1');
-        content = content.replaceAll(hrReg, '$1');
-        content = content.replaceAll(anchorReg, '$1');
-        content = content.replaceAll(noteReg, '$1');
-        content = content.replaceAll(titleReg, '$1');
-        // content = content.replaceAll(uListReg, '$1');
-        // content = content.replaceAll(oListReg, '$1');
-        // content = content.replaceAll(tableReg, '$1');
-        content = content.replaceAll(blockReg, '$1');
-
+    /** Remove \ before the special characters */
+    static toUnescape(content: string): string {
+        const reg = /\\(\\|\*|\/|~|_|\#|\[|\]|\(|\)|\{|\}|,|\^|\:|\|)/g;
+        content = content.replaceAll(reg, '$1');
         return content;
     }
+
+    /** Add \ in front of the special characters */
+    static toEscape(content: string): string {
+        const reg = /(\\|\*|\/|~|_|\#|\[|\]|\(|\)|\{|\}|,|\^|\:|\|)/g;
+        content = content.replaceAll(reg, '\\$1');
+        return content;
+    }
+
 
     static paragraphReg =
         /(?<=(?:<\/h[2-6]>|<div.*?id="content".*?>))\n?((?:.|\n)*?\n?)(?=(?:<h[2-6].*?id=".+?".*?>|<\/div><hr.*?id="content-footnote".*?>))/g;
 
     /** Make paragraphs between all h elements. */
-    static toParagraph(content) {
+    static toParagraph(content: string): string {
         content = content.replaceAll(this.paragraphReg, '<div>$1</div>');
 
         return content;
     }
 
-    static translate(_content) {
-        let content = _content;
-
+    static translate(content: string, allowHtml?: boolean): string {
         try {
+            if (!allowHtml) {
+                content = content.replaceAll(/</g, '&lt;').replaceAll(/>/g, '&gt;');
+            }
+
             content = '<div id="content">\n' + content + '\n</div>';
+
+            content = this.toIgnore(content);
+
 
             content = this.toBold(content);
             content = this.toItalic(content);
@@ -577,9 +535,9 @@ class Translator {
             content = this.toSub(content);
             content = this.toHr(content);
 
-            content = this.toAnchor(content); // This must be done before the notes and blocks.
-
+            content = this.toAnchor(content);
             content = this.toNote(content);
+
             content = this.toTitle(content);
             content = this.toBlocks(content);
 
@@ -591,8 +549,10 @@ class Translator {
             // content = this.toSpan(content);
             // content = this.toMath(content);
 
+            content = this.toNormal(content);
+
             content = this.toClear(content); // This should be done after from lists and table.
-            content = this.toNormal(content); // This should be the second from the last
+            content = this.toUnescape(content); // This should be the second from the last
             content = this.toParagraph(content); // This should be the last
 
             // content = content.replace(/(?<=\n?)((?:.|\n)*)(?=\n?)/, '$1');
@@ -600,8 +560,12 @@ class Translator {
             content = content.replaceAll(/\n/g, '<br>');
 
             return content;
-        } catch (e) {
-            throw new Error(e.message);
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                throw new Error(e.message);
+            } else {
+                throw e;
+            }
         }
     }
 }

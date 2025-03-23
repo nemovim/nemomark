@@ -1,2 +1,5 @@
+demo/
+src/
 test/
 .gitignore
+tsconfig.json

@@ -1,16 +1,19 @@
-<script>
+<script lang="ts">
     import Translator from 'ken-markup';
 
-    let translated = '여기에 번역된 결과가 나타납니다.';
-    let errorMsg = '문법 오류 발생 시 여기에 표시됩니다.';
-    let content = '';
+    let translated = $state<string>('여기에 번역된 결과가 나타납니다.');
+    let errorMsg = $state<string>('문법 오류 발생 시 여기에 표시됩니다.');
+    let content = $state<string>('');
 
     function translate() {
         try {
             translated = Translator.translate(content);
             errorMsg = '문법 오류 발생 시 여기에 표시됩니다.';
         } catch (e) {
-            errorMsg = e;
+            if (e instanceof Error) {
+                console.error(e);
+                errorMsg = e.message;
+            }
         }
     }
 
@@ -21,7 +24,7 @@
     //     }
     // }
 
-    let description = `[ver. 1.0.4]
+    const description = `[ver. 2.0.3]
 \\ 문법 취소
 **굵게**
 //기울임//
@@ -48,25 +51,23 @@ __밑줄__
 
 <section>
     <article id="input">
-        <pre contenteditable="false" bind:innerText={description}></pre>
+        <pre>{description}</pre>
 
         <textarea
             placeholder="내용을 입력하세요"
             name="content"
             bind:value={content}
-            on:keyup={translate}
+            onkeyup={translate}
         ></textarea>
     </article>
 
     <article>
-        <p contenteditable="false" bind:innerText={errorMsg} id="errorP"></p>
+        <p contenteditable="false" id="errorP">{errorMsg}</p>
     </article>
     <article
         class="kmu"
-        contenteditable="false"
-        bind:innerHTML={translated}
         id="output"
-    ></article>
+    >{@html translated}</article>
 </section>
 
 <style lang="scss">
