@@ -24,7 +24,7 @@
     //     }
     // }
 
-    const description = `[ver. 2.0.3]
+    const description = `[ver. 2.0.6]
 \\ 문법 취소
 **굵게**
 //기울임//

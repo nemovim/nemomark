@@ -488,19 +488,30 @@ class Translator {
     /** To clear HTML content by removing unnecessary white spaces. */
     static toClear(content: string): string {
         content = content.replaceAll(this.brListReg, '$1');
+    //     content = content.replaceAll(this.brListReg2, (matched, captured) => {
+    //         console.log(matched, captured);
+    //         return captured
+    // });
+        return content;
+    }
+
+    static brListReg2 = /\n(<\/div><h[2-6])/g;
+    static toClearTitleLineBreaks(content: string): string {
+        console.log(content);
+        content = content.replaceAll(this.brListReg2, '$1');
         return content;
     }
 
     /** Remove \ before the special characters */
     static toUnescape(content: string): string {
-        const reg = /\\(\\|\*|\/|~|_|\#|\[|\]|\(|\)|\{|\}|,|\^|\:|\|)/g;
+        const reg = /\\(\\|\*|\/|~|_|-|\#|\[|\]|\(|\)|\{|\}|,|\^|\:|\|)/g;
         content = content.replaceAll(reg, '$1');
         return content;
     }
 
     /** Add \ in front of the special characters */
     static toEscape(content: string): string {
-        const reg = /(\\|\*|\/|~|_|\#|\[|\]|\(|\)|\{|\}|,|\^|\:|\|)/g;
+        const reg = /(\\|\*|\/|~|_|-|\#|\[|\]|\(|\)|\{|\}|,|\^|\:|\|)/g;
         content = content.replaceAll(reg, '\\$1');
         return content;
     }
@@ -557,6 +568,7 @@ class Translator {
             content = this.toClear(content); // This should be done after from lists and table.
             content = this.toUnescape(content); // This should be the second from the last
             content = this.toParagraph(content); // This should be the last
+            content = this.toClearTitleLineBreaks(content); // This should be after the paragraph
 
             // content = content.replace(/(?<=\n?)((?:.|\n)*)(?=\n?)/, '$1');
 

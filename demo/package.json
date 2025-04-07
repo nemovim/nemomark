@@ -23,6 +23,6 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
-		"ken-markup": "^2.0.3"
+		"ken-markup": "^2.0.6"
 	}
 }

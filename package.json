@@ -1,6 +1,6 @@
 {
   "name": "ken-markup",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "Markup language for ken-zone",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
