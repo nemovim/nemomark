@@ -196,18 +196,20 @@ class Translator {
     }
 
     static toTitle(content: string): string {
-        let titleLevel = 0; // 1 ~ 5
-        let titleMap = new Map<number, string>(); // { titleIndex: title } | ex) {10000: 'a', 11000: 'b', ... }
-        let titleIndex = 0;
+        let level = 0; // 1 ~ 5
+        let indexArr: number[] = [0, 0, 0, 0, 0];
+        const indexArrArr: number[][] = [];
+        const titleArr: string[] = [];
+
         let parsedContent = content.replaceAll(
             this.titleReg,
-            (_match, capture, content) => {
-                if (capture.length <= titleLevel + 1 && capture.length >= 1) {
-                    content = content.trim();
-                    titleLevel = capture.length;
-                    titleIndex = this.changeTitleIndex(titleIndex, titleLevel);
-                    titleMap.set(titleIndex, content);
-                    return this.makeTitle(titleIndex, titleLevel, content);
+            (_match, captured, title) => {
+                if (captured.length <= level+1 && captured.length >= 1) {
+                    title = title.trim();
+                    level = captured.length;
+                    indexArrArr.push([...this.updateIndexArr(indexArr, level)]);
+                    titleArr.push(title)
+                    return this.makeTitleHtml(indexArr, level, title);
                 } else {
                     // The most common reason might be the below.
                     // The level of title cannot be increased more than one in a step.
@@ -215,56 +217,49 @@ class Translator {
                 }
             }
         );
-        parsedContent = this.addTitleIndex(titleMap).concat(parsedContent);
+
+        parsedContent = this.addTitleIndex(indexArrArr, titleArr).concat(parsedContent);
+
         return parsedContent;
     }
 
-    static changeTitleIndex(index: number, level: number): number {
-        const weight = 10 ** (5 - level);
-        return (Math.floor(index / weight) + 1) * weight;
+    static updateIndexArr(indexArr: number[], level: number): number[] {
+        indexArr[level-1] += 1;
+        while(level <= 4) {
+            level+=1;
+            indexArr[level-1] = 0;
+        }
+        return indexArr;
     }
 
-    static makeTitle(index: number, level: number, content: string): string {
-        const idx = this.convertIndex(index);
-        return `<h${level + 1} id="p-${idx.type2}"><a href="#index">${idx.type1
+    static makeTitleHtml(indexArr: number[], level: number, content: string): string {
+        const parsedIdx = this.parseIndexArr(indexArr);
+        return `<h${level + 1} id="p-${parsedIdx.type2}"><a href="#index">${parsedIdx.type1
             }</a> ${content}</h${level + 1}>`;
     }
 
-    /**
-     * Return two types of index
-     * @param {number} index - index number | ex) 12300
-     * @returns {{type1: string, type2: string, level: number}} ex) type1: 1.2.3. | type2: 1-2-3
-     */
-    static convertIndex(index: number): { type1: string, type2: string, level: number } {
-        let level = 0;
-        const indexArray = [];
-        let indexOfLevel;
-        while (level < 5) {
-            indexOfLevel = String(index)[level];
-            if (indexOfLevel !== '0') {
-                indexArray.push(indexOfLevel);
-            } else {
-                break;
-            }
-            level += 1;
-        }
+    // indexArr: [1, 3, 2, 0, 0]
+    // type1: 1.3.2.
+    // type2: 1-3-2
+    // level: 3 (length of valid index)
+    static parseIndexArr(indexArr: number[]): { type1: string, type2: string } {
+        const parsedIndexArr = indexArr.filter(index => index !== 0);
         return {
-            type1: indexArray.join('.').concat('.'),
-            type2: indexArray.join('-'),
-            level: level,
+            type1: parsedIndexArr.join('.').concat('.'),
+            type2: parsedIndexArr.join('-'),
         };
     }
 
-    static addTitleIndex(titleMap: Map<number, string>): string {
-        if (titleMap.size === 0) {
+    static addTitleIndex(indexArr: number[][], titleArr: string[]): string {
+        if (titleArr.length === 0) {
             // If there isn't any title
             return '<div id="index" style="display: none;"></div>';
         } else {
             let content = '<div id="index">';
-            for (let [index, title] of titleMap) {
-                const idx = this.convertIndex(index);
+            for (let i=0; i<titleArr.length; i++) {
+                const parsedIdx = this.parseIndexArr(indexArr[i]);
                 content = content.concat(
-                    `<p><a href="#p-${idx.type2}">${idx.type1}</a> ${title}</p>`
+                    `<p><a href="#p-${parsedIdx.type2}">${parsedIdx.type1}</a> ${titleArr[i]}</p>`
                 );
             }
             return content.concat('</div><hr id="index-content">');
@@ -537,10 +532,6 @@ class Translator {
 
             content = this.toIgnore(content);
 
-            if (customGrammarFunc) {
-                content = customGrammarFunc(content);
-            }
-
             content = this.toBold(content);
             content = this.toItalic(content);
             content = this.toDelete(content);
@@ -562,6 +553,10 @@ class Translator {
 
             // content = this.toSpan(content);
             // content = this.toMath(content);
+
+            if (customGrammarFunc) {
+                content = customGrammarFunc(content);
+            }
 
             content = this.toNormal(content);
 
