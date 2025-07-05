@@ -1,14 +1,14 @@
 <script lang="ts">
-    import Translator from 'ken-markup';
+    import Translator from "nemomark";
 
-    let translated = $state<string>('여기에 번역된 결과가 나타납니다.');
-    let errorMsg = $state<string>('문법 오류 발생 시 여기에 표시됩니다.');
-    let content = $state<string>('');
+    let translated = $state<string>("여기에 번역된 결과가 나타납니다.");
+    let errorMsg = $state<string>("문법 오류 발생 시 여기에 표시됩니다.");
+    let content = $state<string>("");
 
     function translate() {
         try {
             translated = Translator.translate(content);
-            errorMsg = '문법 오류 발생 시 여기에 표시됩니다.';
+            errorMsg = "문법 오류 발생 시 여기에 표시됩니다.";
         } catch (e) {
             if (e instanceof Error) {
                 console.error(e);
@@ -24,7 +24,7 @@
     //     }
     // }
 
-    const description = `[ver. 2.0.7]
+    const description = `[ver. 1.0.0]
 \\ 문법 취소
 **굵게**
 //기울임//
@@ -43,11 +43,7 @@ __밑줄__
 `;
 </script>
 
-<h1>
-    <span style="color: rgb(0, 50, 104);">K</span><span
-        style="color: rgb(0, 132, 202);">E</span
-    ><span style="color: rgb(21, 192, 242);">N</span>-MARKUP TEST
-</h1>
+<h1><span style:color={"rgb(50, 150, 250)"}>NEMOMARK</span> TEST</h1>
 
 <section>
     <article id="input">
@@ -64,14 +60,11 @@ __밑줄__
     <article>
         <p contenteditable="false" id="errorP">{errorMsg}</p>
     </article>
-    <article
-        class="kmu"
-        id="output"
-    >{@html translated}</article>
+    <article class="kmu" id="output">{@html translated}</article>
 </section>
 
 <style lang="scss">
-    @import './kmu.scss';
+    @use "./kmu.scss";
 
     section {
         display: flex;
