@@ -204,7 +204,7 @@ class Translator {
         let parsedContent = content.replaceAll(
             this.titleReg,
             (_match, captured, title) => {
-                if (captured.length <= level+1 && captured.length >= 1) {
+                if (captured.length <= level + 1 && captured.length >= 1) {
                     title = title.trim();
                     level = captured.length;
                     indexArrArr.push([...this.updateIndexArr(indexArr, level)]);
@@ -224,10 +224,10 @@ class Translator {
     }
 
     static updateIndexArr(indexArr: number[], level: number): number[] {
-        indexArr[level-1] += 1;
-        while(level <= 4) {
-            level+=1;
-            indexArr[level-1] = 0;
+        indexArr[level - 1] += 1;
+        while (level <= 4) {
+            level += 1;
+            indexArr[level - 1] = 0;
         }
         return indexArr;
     }
@@ -256,7 +256,7 @@ class Translator {
             return '<div id="index" style="display: none;"></div>';
         } else {
             let content = '<div id="index">';
-            for (let i=0; i<titleArr.length; i++) {
+            for (let i = 0; i < titleArr.length; i++) {
                 const parsedIdx = this.parseIndexArr(indexArr[i]);
                 content = content.concat(
                     `<p><a href="#p-${parsedIdx.type2}">${parsedIdx.type1}</a> ${titleArr[i]}</p>`
@@ -483,16 +483,15 @@ class Translator {
     /** To clear HTML content by removing unnecessary white spaces. */
     static toClear(content: string): string {
         content = content.replaceAll(this.brListReg, '$1');
-    //     content = content.replaceAll(this.brListReg2, (matched, captured) => {
-    //         console.log(matched, captured);
-    //         return captured
-    // });
+        //     content = content.replaceAll(this.brListReg2, (matched, captured) => {
+        //         console.log(matched, captured);
+        //         return captured
+        // });
         return content;
     }
 
     static brListReg2 = /\n(<\/div><h[2-6])/g;
     static toClearTitleLineBreaks(content: string): string {
-        console.log(content);
         content = content.replaceAll(this.brListReg2, '$1');
         return content;
     }
@@ -522,28 +521,58 @@ class Translator {
         return content;
     }
 
-    static translate(content: string, allowHtml?: boolean, customGrammarFunc?: (arg1: string)=>string): string {
+    static toInlines(content: string): string {
+        content = this.toBold(content);
+        content = this.toItalic(content);
+        content = this.toDelete(content);
+        content = this.toUnder(content);
+        content = this.toSup(content);
+        content = this.toSub(content);
+        content = this.toHr(content);
+
+        content = this.toAnchor(content);
+        content = this.toNote(content);
+
+        content = this.toTitle(content);
+
+        return content;
+    }
+
+    static preprocess(content: string, allowHtml?: boolean): string {
+        if (!allowHtml) {
+            content = content.replaceAll(/</g, '&lt;').replaceAll(/>/g, '&gt;');
+        }
+
+        content = '<div id="content">\n' + content + '\n</div>';
+
+        content = this.toIgnore(content);
+
+        return content;
+    }
+
+    static postprocess(content: string): string {
+        content = this.toNormal(content);
+
+        content = this.toClear(content); // This should be done after from lists and table.
+        content = this.toUnescape(content); // This should be the second from the last
+        content = this.toParagraph(content); // This should be the last
+
+        content = this.toClearTitleLineBreaks(content); // This should be after the paragraph
+
+        // content = content.replace(/(?<=\n?)((?:.|\n)*)(?=\n?)/, '$1');
+
+        content = content.replaceAll(/\n/g, '<br>');
+
+        return content;
+    }
+
+    static translate(content: string, allowHtml?: boolean): string {
         try {
-            if (!allowHtml) {
-                content = content.replaceAll(/</g, '&lt;').replaceAll(/>/g, '&gt;');
-            }
 
-            content = '<div id="content">\n' + content + '\n</div>';
+            content = this.preprocess(content, allowHtml);
 
-            content = this.toIgnore(content);
+            content = this.toInlines(content);
 
-            content = this.toBold(content);
-            content = this.toItalic(content);
-            content = this.toDelete(content);
-            content = this.toUnder(content);
-            content = this.toSup(content);
-            content = this.toSub(content);
-            content = this.toHr(content);
-
-            content = this.toAnchor(content);
-            content = this.toNote(content);
-
-            content = this.toTitle(content);
             content = this.toBlocks(content);
 
             // content = this.toImage(content);
@@ -554,20 +583,7 @@ class Translator {
             // content = this.toSpan(content);
             // content = this.toMath(content);
 
-            if (customGrammarFunc) {
-                content = customGrammarFunc(content);
-            }
-
-            content = this.toNormal(content);
-
-            content = this.toClear(content); // This should be done after from lists and table.
-            content = this.toUnescape(content); // This should be the second from the last
-            content = this.toParagraph(content); // This should be the last
-            content = this.toClearTitleLineBreaks(content); // This should be after the paragraph
-
-            // content = content.replace(/(?<=\n?)((?:.|\n)*)(?=\n?)/, '$1');
-
-            content = content.replaceAll(/\n/g, '<br>');
+            content = this.postprocess(content);
 
             return content;
         } catch (e: unknown) {

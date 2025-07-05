@@ -1,7 +1,7 @@
 {
-  "name": "ken-markup",
-  "version": "2.0.7",
-  "description": "Markup language for ken-zone",
+  "name": "nemomark",
+  "version": "1.0.0",
+  "description": "A new markup language",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
@@ -9,7 +9,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nemovim/ken-markup.git"
+    "url": "git+https://github.com/nemovim/nemomark.git"
   },
   "devDependencies": {
     "vitest": "^3.0.9"

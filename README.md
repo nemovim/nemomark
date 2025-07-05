@@ -1,21 +1,21 @@
-# ken-markup
+# Nemomark
 
-Ken-Markup is a markup language made for family websites of ken-zone.
+**Nemomark** is a lightweight, general-purpose markup language designed to work anywhere.
 
-[Here](https://ken-markup.vercel.app) is a demo website of ken-markup (in Korean).
+[Here](https://nemomark.vercel.app) is a demo website of the Nemomark (in Korean).
 
 ## Usage 
 
 1. Install the module 
 
     ```bash
-    $ npm i ken-markup
+    $ npm i nemomark
     ```
 
 1. Import the module 
 
     ```js
-    import Translator from 'ken-markup'
+    import Translator from 'nemomark'
     ```
 
     *You can import it with a different name (i.e. instead of Translator) if you want.*
