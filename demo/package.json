@@ -23,6 +23,6 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
-		"nemomark": "^1.0.0"
+		"nemomark": "^1.0.1"
 	}
 }
